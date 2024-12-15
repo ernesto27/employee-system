@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"employees-system/controllers"
 	"employees-system/models"
+	"employees-system/response"
 	"errors"
 	"net/http"
 	"strings"
@@ -34,8 +35,8 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	r.Use(middleware.Logger)
 	r.Use(c.Handler)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("API emplyees-system v1"))
+	r.Get(apiVersion+"/", func(w http.ResponseWriter, r *http.Request) {
+		response.NewWithoutData().WithMessage("employees system api v1").Success(w)
 	})
 
 	r.Get(apiVersion+"/employees", func(w http.ResponseWriter, r *http.Request) {

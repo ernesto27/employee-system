@@ -32,6 +32,9 @@ func NewWithoutData() *Response {
 }
 
 func (r *Response) Success(w http.ResponseWriter) {
+	if r.customMessage != "" {
+		r.Message = r.customMessage
+	}
 	r.WriteJSON(w, http.StatusOK, nil)
 }
 
