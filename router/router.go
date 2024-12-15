@@ -6,7 +6,9 @@ import (
 	"employees-system/models"
 	"employees-system/response"
 	"errors"
+	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -41,6 +43,35 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 
 	r.Get(apiVersion+"/employees", func(w http.ResponseWriter, r *http.Request) {
 		employeeController.GetAll(w, r)
+	})
+
+	r.Get(apiVersion+"/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
+		employeeController.GetByID(w, r)
+	})
+
+	r.Get("/admin/employees", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, err := template.ParseFiles("templates/employees.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		pageStr := r.URL.Query().Get("page")
+		if pageStr == "" {
+			pageStr = "1"
+		}
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			http.Error(w, "Invalid page number", http.StatusBadRequest)
+			return
+		}
+
+		employees, err := employeeController.EmployeeService.GetAll(page)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tmpl.Execute(w, employees)
 	})
 
 	return r
