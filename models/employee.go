@@ -9,7 +9,7 @@ type Employee struct {
 	Name          string `json:"name"`
 	Email         string `json:"email"`
 	Age           int    `json:"age"`
-	Images        string `json:"images"`
+	Image         string `json:"images"`
 	StartWorkDate string `json:"start_work_date"`
 	EndWorkDate   string `json:"end_work_date"`
 	Active        bool   `json:"active"`
@@ -65,11 +65,11 @@ func (employeeService *EmployeeService) GetByID(id int) (Employee, error) {
 		SELECT 
 			id, name, email, 
 			age, start_work_date, end_work_date,
-			created_at, updated_at 
+			created_at, updated_at, image
 		FROM employees WHERE id = ?`, id).Scan(
 		&employee.ID, &employee.Name, &employee.Email,
 		&employee.Age, &employee.StartWorkDate, &employee.EndWorkDate,
-		&employee.CreatedAt, &employee.UpdatedAt,
+		&employee.CreatedAt, &employee.UpdatedAt, &employee.Image,
 	)
 	if err != nil {
 		return employee, err

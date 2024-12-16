@@ -3,7 +3,7 @@ CREATE TABLE employees (
     name VARCHAR(255),
     email VARCHAR(255),
     age INT,
-    images TEXT,
+    image TEXT,
     start_work_date DATE,
     end_work_date DATE,
     active BOOLEAN,
@@ -61,9 +61,42 @@ CREATE TABLE projects_technologies (
     FOREIGN KEY (technology_id) REFERENCES technologies(id)
 );
 
-INSERT INTO employees (name, email, age, images, start_work_date, end_work_date, active, created_at, updated_at) VALUES
+INSERT INTO employees (name, email, age, image, start_work_date, end_work_date, active, created_at, updated_at) VALUES
 ('John Doe', 'john.doe@example.com', 30, 'image1.jpg', '2022-01-01', '2023-01-01', TRUE, NOW(), NOW()),
 ('Jane Smith', 'jane.smith@example.com', 25, 'image2.jpg', '2021-06-01', '2022-06-01', TRUE, NOW(), NOW());
+
+INSERT INTO employees (name, email, age, image, start_work_date, end_work_date, active, created_at, updated_at) VALUES
+('Alice Johnson', 'alice.johnson@example.com', 28, 'image3.jpg', '2020-03-01', '2021-03-01', TRUE, NOW(), NOW()),
+('Bob Brown', 'bob.brown@example.com', 35, 'image4.jpg', '2019-07-01', '2020-07-01', TRUE, NOW(), NOW()),
+('Charlie Davis', 'charlie.davis@example.com', 40, 'image5.jpg', '2018-05-01 09:00:00', '2019-05-01 17:00:00', TRUE, NOW(), NOW()),
+('Diana Evans', 'diana.evans@example.com', 32, 'image6.jpg', '2017-09-01 09:00:00', '2018-09-01 17:00:00', TRUE, NOW(), NOW()),
+('Ethan Foster', 'ethan.foster@example.com', 29, 'image7.jpg', '2016-11-01 09:00:00', '2017-11-01 17:00:00', TRUE, NOW(), NOW()),
+('Fiona Green', 'fiona.green@example.com', 27, 'image8.jpg', '2015-01-01 09:00:00', '2016-01-01 17:00:00', TRUE, NOW(), NOW()),
+('George Harris', 'george.harris@example.com', 33, 'image9.jpg', '2014-04-01 09:00:00', '2015-04-01 17:00:00', TRUE, NOW(), NOW()),
+('Hannah Ingram', 'hannah.ingram@example.com', 31, 'image10.jpg', '2013-06-01 09:00:00', '2014-06-01 17:00:00', TRUE, NOW(), NOW()),
+('Ian Jackson', 'ian.jackson@example.com', 36, 'image11.jpg', '2012-08-01 09:00:00', '2013-08-01 17:00:00', TRUE, NOW(), NOW()),
+('Julia King', 'julia.king@example.com', 34, 'image12.jpg', '2011-10-01 09:00:00', '2012-10-01 17:00:00', TRUE, NOW(), NOW()),
+('Kevin Lewis', 'kevin.lewis@example.com', 38, 'image13.jpg', '2010-12-01 09:00:00', '2011-12-01 17:00:00', TRUE, NOW(), NOW()),
+('Laura Martinez', 'laura.martinez@example.com', 26, 'image14.jpg', '2009-02-01 09:00:00', '2010-02-01 17:00:00', TRUE, NOW(), NOW()),
+('Michael Nelson', 'michael.nelson@example.com', 37, 'image15.jpg', '2008-04-01 09:00:00', '2009-04-01 17:00:00', TRUE, NOW(), NOW()),
+('Nina Owens', 'nina.owens@example.com', 39, 'image16.jpg', '2007-06-01 09:00:00', '2008-06-01 17:00:00', TRUE, NOW(), NOW()),
+('Oscar Perez', 'oscar.perez@example.com', 41, 'image17.jpg', '2006-08-01 09:00:00', '2007-08-01 17:00:00', TRUE, NOW(), NOW()),
+('Paula Quinn', 'paula.quinn@example.com', 42, 'image18.jpg', '2005-10-01 09:00:00', '2006-10-01 17:00:00', TRUE, NOW(), NOW()),
+('Quincy Roberts', 'quincy.roberts@example.com', 43, 'image19.jpg', '2004-12-01 09:00:00', '2005-12-01 17:00:00', TRUE, NOW(), NOW()),
+('Rachel Scott', 'rachel.scott@example.com', 44, 'image20.jpg', '2003-02-01 09:00:00', '2004-02-01 17:00:00', TRUE, NOW(), NOW()),
+('Samuel Thompson', 'samuel.thompson@example.com', 45, 'image21.jpg', '2002-04-01 09:00:00', '2003-04-01 17:00:00', TRUE, NOW(), NOW()),
+('Tina Underwood', 'tina.underwood@example.com', 46, 'image22.jpg', '2001-06-01 09:00:00', '2002-06-01 17:00:00', TRUE, NOW(), NOW()),
+('Ulysses Vega', 'ulysses.vega@example.com', 47, 'image23.jpg', '2000-08-01 09:00:00', '2001-08-01 17:00:00', TRUE, NOW(), NOW()),
+('Victoria White', 'victoria.white@example.com', 48, 'image24.jpg', '1999-10-01 09:00:00', '2000-10-01 17:00:00', TRUE, NOW(), NOW()),
+('William Xavier', 'william.xavier@example.com', 49, 'image25.jpg', '1998-12-01 09:00:00', '1999-12-01 17:00:00', TRUE, NOW(), NOW()),
+('Xena Young', 'xena.young@example.com', 50, 'image26.jpg', '1997-02-01 09:00:00', '1998-02-01 17:00:00', TRUE, NOW(), NOW()),
+('Yvonne Zane', 'yvonne.zane@example.com', 51, 'image27.jpg', '1996-04-01 09:00:00', '1997-04-01 17:00:00', TRUE, NOW(), NOW()),
+('Zachary Adams', 'zachary.adams@example.com', 52, 'image28.jpg', '1995-06-01 09:00:00', '1996-06-01 17:00:00', TRUE, NOW(), NOW()),
+('Amber Brown', 'amber.brown@example.com', 53, 'image29.jpg', '1994-08-01 09:00:00', '1995-08-01 17:00:00', TRUE, NOW(), NOW()),
+('Brian Clark', 'brian.clark@example.com', 54, 'image30.jpg', '1993-10-01 09:00:00', '1994-10-01 17:00:00', TRUE, NOW(), NOW()),
+('Catherine Davis', 'catherine.davis@example.com', 55, 'image31.jpg', '1992-12-01 09:00:00', '1993-12-01 17:00:00', TRUE, NOW(), NOW()),
+('David Evans', 'david.evans@example.com', 56, 'https://imgs.search.brave.com/inJXWy1ZV0RLz1UvrE9SY1XdowevuzIA6PVSUdPkoQ0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL00v/TVY1QllqWTRaVFJq/TnpBdE1UUm1NUzAw/WW1VM0xXRTVOV0V0/WmpVMk5UYzJPRFUy/TWpBd1hrRXlYa0Zx/Y0djQC5qcGc', '1991-02-01 09:00:00', '1992-02-01 17:00:00', TRUE, NOW(), NOW());
+
 
 INSERT INTO roles (name) VALUES
 ('Developer'),

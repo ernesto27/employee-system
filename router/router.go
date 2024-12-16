@@ -74,6 +74,28 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		tmpl.Execute(w, employees)
 	})
 
+	r.Get("/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, err := template.ParseFiles("templates/employee_detail.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "Invalid employee ID", http.StatusBadRequest)
+			return
+		}
+
+		employee, err := employeeController.EmployeeService.GetByID(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		tmpl.Execute(w, employee)
+	})
+
 	return r
 }
 

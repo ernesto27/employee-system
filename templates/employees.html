@@ -38,12 +38,11 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Work Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Work Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {{range .}}
-                    <tr>
+                    <tr onclick="window.location.href='/admin/employees/{{.ID}}'" class="cursor-pointer">
                         <td class="px-6 py-4 whitespace-nowrap">{{.ID}}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{.Name}}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{.Email}}</td>
@@ -51,7 +50,6 @@
                         <td class="px-6 py-4 whitespace-nowrap">{{.StartWorkDate}}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{.EndWorkDate}}</td>
                         <td class="px-6 py-4 whitespace-nowrap">{{.Active}}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{.CreatedAt}}</td>
                     </tr>
                     {{end}}
                 </tbody>
