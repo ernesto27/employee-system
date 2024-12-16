@@ -6,6 +6,7 @@ import (
 	"employees-system/models"
 	"employees-system/response"
 	"errors"
+	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -57,7 +58,8 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	})
 
 	r.Get("/admin/employees", func(w http.ResponseWriter, r *http.Request) {
-		tmpl, err := template.ParseFiles("templates/employee-list.html")
+		// tmpl, err := template.ParseFiles("templates/employee-list.html")
+		tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-list.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -78,7 +80,10 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, employees)
+		err = tmpl.ExecuteTemplate(w, "layout-base", employees)
+		if err != nil {
+			fmt.Println(err)
+		}
 	})
 
 	r.Get("/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
