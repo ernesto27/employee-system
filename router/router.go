@@ -8,6 +8,8 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -37,6 +39,11 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	r.Use(middleware.Logger)
 	r.Use(c.Handler)
 
+	// Serve static files from the "public" directory
+	workDir, _ := os.Getwd()
+	filesDir := http.Dir(filepath.Join(workDir, "public"))
+	FileServer(r, "/admin/public", filesDir)
+
 	r.Get(apiVersion+"/", func(w http.ResponseWriter, r *http.Request) {
 		response.NewWithoutData().WithMessage("employees system api v1").Success(w)
 	})
@@ -50,7 +57,7 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	})
 
 	r.Get("/admin/employees", func(w http.ResponseWriter, r *http.Request) {
-		tmpl, err := template.ParseFiles("templates/employees.html")
+		tmpl, err := template.ParseFiles("templates/employee-list.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -97,6 +104,23 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	})
 
 	return r
+}
+
+// FileServer conveniently sets up a http.FileServer handler to serve static files from a http.FileSystem.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit any URL parameters.")
+	}
+
+	fs := http.StripPrefix(path, http.FileServer(root))
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, fs.ServeHTTP)
 }
 
 func ValidateAdminApiToken(next http.Handler) http.Handler {
