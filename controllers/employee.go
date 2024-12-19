@@ -3,9 +3,11 @@ package controllers
 import (
 	"employees-system/models"
 	"employees-system/response"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi"
 )
@@ -48,5 +50,25 @@ func (employee *Employee) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.New(employeeData).Success(w)
+}
 
+func (employee *Employee) Create(w http.ResponseWriter, r *http.Request) {
+
+	var newEmployee models.Employee
+	jsonString := r.FormValue("jsonBody")
+	err := json.NewDecoder(strings.NewReader(jsonString)).Decode(&newEmployee)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Unable to decode JSON", http.StatusBadRequest)
+		return
+	}
+
+	_, err = employee.EmployeeService.Create(newEmployee)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newEmployee)
 }

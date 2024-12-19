@@ -77,3 +77,21 @@ func (employeeService *EmployeeService) GetByID(id int) (Employee, error) {
 
 	return employee, nil
 }
+
+func (employeeService *EmployeeService) Create(employee Employee) (int, error) {
+	result, err := employeeService.DB.Exec(`
+		INSERT INTO employees (name, email, age, start_work_date, image)
+		VALUES (?, ?, ?, ?, ?)`,
+		employee.Name, employee.Email, employee.Age, employee.StartWorkDate, employee.Image,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
+}

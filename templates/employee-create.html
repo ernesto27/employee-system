@@ -1,0 +1,71 @@
+
+{{define "content"}}
+<div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-3xl mx-auto">
+    <div class="bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700">
+        <header class="px-5 py-4">
+            <h2 class="font-semibold text-slate-800 dark:text-slate-100">Create New Employee</h2>
+        </header>
+        <div class="p-6">
+            <form action="/admin/employees/create" method="POST" enctype="multipart/form-data">
+                <!-- ID Field (usually auto-generated, but included as hidden) -->
+                <input type="hidden" id="id" name="id">
+                
+                <!-- Name Field -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="name">
+                        Name <span class="text-rose-500">*</span>
+                    </label>
+                    <input id="name" name="name" class="form-input w-full" type="text" required />
+                </div>
+
+                <!-- Email Field -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="email">
+                        Email <span class="text-rose-500">*</span>
+                    </label>
+                    <input id="email" name="email" class="form-input w-full" type="email" required />
+                </div>
+
+                <!-- Age Field -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="age">
+                        Age <span class="text-rose-500">*</span>
+                    </label>
+                    <input id="age" name="age" class="form-input w-full" type="number" min="18" max="100" required />
+                </div>
+
+                <!-- Image Upload -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="image">
+                        Profile Image
+                    </label>
+                    <input id="image" name="image" class="form-input w-full" type="file" accept="image/*" />
+                </div>
+
+                <!-- Start Work Date -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="start_work_date">
+                        Start Work Date <span class="text-rose-500">*</span>
+                    </label>
+                    <input id="start_work_date" name="start_work_date" class="form-input w-full" type="date" required />
+                </div>
+
+
+                <!-- Active Status -->
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="active" class="form-checkbox" checked />
+                        <span class="text-sm ml-2">Active Employee</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex items-center justify-end mt-6">
+                    <button type="button" class="btn border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300 mr-2">Cancel</button>
+                    <button type="submit" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">Create Employee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}

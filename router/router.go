@@ -19,6 +19,11 @@ import (
 	"github.com/rs/cors"
 )
 
+type TemplateData struct {
+	Employees []models.Employee
+	URL       string
+}
+
 func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	const apiVersion = "/api/v1"
 
@@ -57,8 +62,9 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		employeeController.GetByID(w, r)
 	})
 
+	url := "http://localhost:8080/admin/public"
+
 	r.Get("/admin/employees", func(w http.ResponseWriter, r *http.Request) {
-		// tmpl, err := template.ParseFiles("templates/employee-list.html")
 		tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-list.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -80,10 +86,37 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		err = tmpl.ExecuteTemplate(w, "layout-base", employees)
+
+		data := TemplateData{
+			Employees: employees,
+			URL:       url,
+		}
+
+		err = tmpl.ExecuteTemplate(w, "layout-base", data)
 		if err != nil {
 			fmt.Println(err)
 		}
+	})
+
+	r.Get("/admin/employees/create", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-create.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data := TemplateData{
+			URL: url,
+		}
+
+		err = tmpl.ExecuteTemplate(w, "layout-base", data)
+		if err != nil {
+			fmt.Println(err)
+		}
+	})
+
+	r.Post(apiVersion+"/admin/employees/create", func(w http.ResponseWriter, r *http.Request) {
+		employeeController.Create(w, r)
 	})
 
 	r.Get("/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
