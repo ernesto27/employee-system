@@ -127,6 +127,20 @@
         });
         formEntries.technologies = technologies;
 
+        // Format date fields to YYYY-MM-DD if they are valid
+        if (formEntries.startWorkDate) {
+            const startWorkDate = new Date(formEntries.startWorkDate);
+            if (!isNaN(startWorkDate)) {
+                formEntries.startWorkDate = startWorkDate.toISOString().split('T')[0];
+            }
+        }
+        if (formEntries.endWorkDate) {
+            const endWorkDate = new Date(formEntries.endWorkDate);
+            if (!isNaN(endWorkDate)) {
+                formEntries.endWorkDate = endWorkDate.toISOString().split('T')[0];
+            }
+        }
+
         const jsonBody = JSON.stringify(formEntries);
         const postData = new FormData();
         postData.append('jsonBody', jsonBody);
@@ -141,7 +155,7 @@
             if (response.ok) {
                 alert('Employee updated successfully!');
                 form.reset();
-                window.location.reload(); // Reload the page after success
+                //window.location.reload(); // Reload the page after success
             } else {
                 alert('Failed to update employee.');
             }
@@ -150,5 +164,18 @@
             alert('An error occurred while updating the employee.');
         }
     }
+
+    // Format date fields to YYYY-MM-DD on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            if (input.value) {
+                const date = new Date(input.value);
+                if (!isNaN(date)) {
+                    input.value = date.toISOString().split('T')[0];
+                }
+            }
+        });
+    });
 </script>
 {{end}}

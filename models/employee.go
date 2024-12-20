@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 type Employee struct {
@@ -123,10 +124,17 @@ func (employeeService *EmployeeService) Create(employee Employee) (int, error) {
 		return 0, err
 	}
 
+	var endWorkDate interface{}
+	if employee.EndWorkDate == "" {
+		endWorkDate = nil
+	} else {
+		endWorkDate = employee.EndWorkDate
+	}
+
 	result, err := tx.Exec(`
-		INSERT INTO employees (name, email, date_birth, start_work_date, image)
-		VALUES (?, ?, ?, ?, ?)`,
-		employee.Name, employee.Email, employee.DateBirth, employee.StartWorkDate, employee.Image,
+		INSERT INTO employees (name, email, date_birth, start_work_date, end_work_date, image)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		employee.Name, employee.Email, employee.DateBirth, employee.StartWorkDate, endWorkDate, employee.Image,
 	)
 	if err != nil {
 		tx.Rollback()
@@ -172,13 +180,23 @@ func (employeeService *EmployeeService) UpdateByID(employee Employee) error {
 		return err
 	}
 
+	var endWorkDate interface{}
+	if employee.EndWorkDate == "" {
+		endWorkDate = nil
+	} else {
+		endWorkDate = employee.EndWorkDate
+	}
+
 	_, err = tx.Exec(`
 		UPDATE employees 
-		SET name = ?, email = ?, date_birth = ?, start_work_date = ?, image = ?, active = ?
+		SET name = ?, email = ?, date_birth = ?, start_work_date = ?, end_work_date = ?, image = ?, active = ?
 		WHERE id = ?`,
-		employee.Name, employee.Email, employee.DateBirth, employee.StartWorkDate, employee.Image, employee.ID, employee.Active,
+		employee.Name, employee.Email, employee.DateBirth,
+		employee.StartWorkDate, endWorkDate, employee.Image, employee.Active,
+		employee.ID,
 	)
 	if err != nil {
+		fmt.Println(err)
 		tx.Rollback()
 		return err
 	}
