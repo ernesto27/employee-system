@@ -15,6 +15,7 @@ type Employee struct {
 	Active        bool   `json:"active"`
 	CreatedAt     string `json:"created_at"`
 	UpdatedAt     string `json:"updated_at"`
+	Roles         []Role `json:"roles"`
 }
 
 type EmployeeService struct {
@@ -91,17 +92,39 @@ func (employeeService *EmployeeService) GetByID(id int) (Employee, error) {
 }
 
 func (employeeService *EmployeeService) Create(employee Employee) (int, error) {
-	result, err := employeeService.DB.Exec(`
+	tx, err := employeeService.DB.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := tx.Exec(`
 		INSERT INTO employees (name, email, date_birth, start_work_date, image)
 		VALUES (?, ?, ?, ?, ?)`,
 		employee.Name, employee.Email, employee.DateBirth, employee.StartWorkDate, employee.Image,
 	)
 	if err != nil {
+		tx.Rollback()
 		return 0, err
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+
+	rolService := RoleService{Transaction: tx}
+	for _, role := range employee.Roles {
+		err := rolService.AssociateRolEmployee(int(id), role.ID)
+		if err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
 		return 0, err
 	}
 

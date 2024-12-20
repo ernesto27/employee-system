@@ -21,6 +21,7 @@ import (
 
 type TemplateData struct {
 	Employees []models.Employee
+	Roles     []models.Role
 	URL       string
 }
 
@@ -31,6 +32,10 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		EmployeeService: models.EmployeeService{
 			DB: dbInstance,
 		},
+	}
+
+	roleService := models.RoleService{
+		DB: dbInstance,
 	}
 
 	c := cors.New(cors.Options{
@@ -105,8 +110,15 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
+		roles, err := roleService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		data := TemplateData{
-			URL: url,
+			URL:   url,
+			Roles: roles,
 		}
 
 		err = tmpl.ExecuteTemplate(w, "layout-base", data)

@@ -99,7 +99,10 @@ INSERT INTO employees (name, email, date_birth, image, start_work_date, end_work
 
 INSERT INTO roles (name) VALUES
 ('Developer'),
-('Manager');
+('Manager'),
+('Tester'),
+('Designer'),
+('DevOps');
 
 INSERT INTO employees_roles (employee_id, role_id) VALUES
 (1, 1),
@@ -115,7 +118,10 @@ INSERT INTO employees_projects (employee_id, project_id, start_date, end_date) V
 
 INSERT INTO technologies (name, description) VALUES
 ('Python', 'A high-level programming language'),
-('JavaScript', 'A programming language commonly used in web development');
+('JavaScript', 'A programming language commonly used in web development'),
+('Java', 'A high-level, class-based, object-oriented programming language'),
+('C++', 'A general-purpose programming language created as an extension of the C programming language'),
+('Ruby', 'A dynamic, open source programming language with a focus on simplicity and productivity');
 
 INSERT INTO projects_technologies (project_id, technology_id) VALUES
 (1, 1),

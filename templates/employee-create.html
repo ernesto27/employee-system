@@ -49,6 +49,20 @@
                     <input id="startWorkDate" name="startWorkDate" class="form-input w-full" type="date" required />
                 </div>
 
+                <!-- Roles Section -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Roles
+                    </label>
+                    <div class="grid grid-cols-3 gap-4">
+                        {{range .Roles}}
+                        <label class="flex items-center mb-2">
+                            <input type="checkbox" name="roles" value="{{.ID}}" class="form-checkbox" />
+                            <span class="text-sm ml-2">{{.Name}}</span>
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
 
                 <!-- Active Status -->
                 <div class="mb-4">
@@ -85,6 +99,16 @@
         if (!formEntries.image) {
             formEntries.image = '';
         }
+
+        // Convert roles to the specified format
+        const roles = [];
+        form.querySelectorAll('input[name="roles"]:checked').forEach(roleCheckbox => {
+            roles.push({
+                id: parseInt(roleCheckbox.value, 10),
+                name: roleCheckbox.nextElementSibling.textContent.trim()
+            });
+        });
+        formEntries.roles = roles;
 
         const jsonBody = JSON.stringify(formEntries);
         const postData = new FormData();
