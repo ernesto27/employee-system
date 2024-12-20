@@ -100,6 +100,20 @@ func (employeeService *EmployeeService) GetByID(id int) (Employee, error) {
 		employee.UpdatedAt = updatedAt.String
 	}
 
+	roleService := RoleService{DB: employeeService.DB}
+	roles, err := roleService.GetByEmployeeID(id)
+	if err != nil {
+		return employee, err
+	}
+	employee.Roles = roles
+
+	technologyService := TechnologyService{DB: employeeService.DB}
+	technologies, err := technologyService.GetByEmployeeID(id)
+	if err != nil {
+		return employee, err
+	}
+	employee.Technologies = technologies
+
 	return employee, nil
 }
 
@@ -150,4 +164,62 @@ func (employeeService *EmployeeService) Create(employee Employee) (int, error) {
 	}
 
 	return int(id), nil
+}
+
+func (employeeService *EmployeeService) UpdateByID(employee Employee) error {
+	tx, err := employeeService.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+		UPDATE employees 
+		SET name = ?, email = ?, date_birth = ?, start_work_date = ?, image = ?, active = ?
+		WHERE id = ?`,
+		employee.Name, employee.Email, employee.DateBirth, employee.StartWorkDate, employee.Image, employee.ID, employee.Active,
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	rolService := RoleService{Transaction: tx}
+
+	err = rolService.RemoveByEmployeeID(employee.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	for _, role := range employee.Roles {
+		err := rolService.AssociateRolEmployee(employee.ID, role.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	technologyService := TechnologyService{Transaction: tx}
+
+	err = technologyService.RemoveByEmployeeID(employee.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	for _, technology := range employee.Technologies {
+		err := technologyService.AssociateTechnologyEmployee(employee.ID, technology.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }

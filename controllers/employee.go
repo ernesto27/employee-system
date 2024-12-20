@@ -53,7 +53,6 @@ func (employee *Employee) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (employee *Employee) Create(w http.ResponseWriter, r *http.Request) {
-
 	var newEmployee models.Employee
 	jsonString := r.FormValue("jsonBody")
 	err := json.NewDecoder(strings.NewReader(jsonString)).Decode(&newEmployee)
@@ -71,4 +70,41 @@ func (employee *Employee) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newEmployee)
+}
+
+func (employee *Employee) UpdateByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	if id == "" {
+		fmt.Println("id is required")
+		response.NewWithoutData().BadRequest(w)
+		return
+	}
+
+	idVal, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Println(err)
+		response.NewWithoutData().BadRequest(w)
+		return
+	}
+
+	var updatedEmployee models.Employee
+	jsonString := r.FormValue("jsonBody")
+	err = json.NewDecoder(strings.NewReader(jsonString)).Decode(&updatedEmployee)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Unable to decode JSON", http.StatusBadRequest)
+		return
+	}
+
+	updatedEmployee.ID = idVal
+
+	err = employee.EmployeeService.UpdateByID(updatedEmployee)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedEmployee)
 }

@@ -48,3 +48,43 @@ func (roleService *RoleService) AssociateRolEmployee(employeeID int, roleID int)
 
 	return nil
 }
+
+func (roleService *RoleService) GetByEmployeeID(employeeID int) ([]Role, error) {
+	var roles []Role
+	rows, err := roleService.DB.Query(`
+		SELECT roles.id, roles.name
+		FROM roles
+		JOIN employees_roles ON roles.id = employees_roles.role_id
+		WHERE employees_roles.employee_id = ?
+	`, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var role Role
+
+		err := rows.Scan(
+			&role.ID, &role.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		roles = append(roles, role)
+	}
+
+	return roles, nil
+}
+
+func (roleService *RoleService) RemoveByEmployeeID(employeeID int) error {
+	_, err := roleService.Transaction.Exec(`
+		DELETE FROM employees_roles WHERE employee_id = ?
+	`, employeeID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

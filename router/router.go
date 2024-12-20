@@ -144,8 +144,27 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		employeeController.Create(w, r)
 	})
 
+	funcMap := template.FuncMap{
+		"hasRole": func(roleID int, employeeRoles []models.Role) bool {
+			for _, r := range employeeRoles {
+				if r.ID == roleID {
+					return true
+				}
+			}
+			return false
+		},
+		"hasTechnology": func(techID int, employeeTechs []models.Technology) bool {
+			for _, t := range employeeTechs {
+				if t.ID == techID {
+					return true
+				}
+			}
+			return false
+		},
+	}
+
 	r.Get("/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
-		tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-detail.html")
+		tmpl, err := template.New("layout-base").Funcs(funcMap).ParseFiles("templates/layout-base.html", "templates/employee-detail.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -164,15 +183,35 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
+		roles, err := roleService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		technologies, err := technologyService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Println(roles)
+
 		data := TemplateData{
-			Employee: employee,
-			URL:      url,
+			Employee:     employee,
+			Roles:        roles,
+			Technologies: technologies,
+			URL:          url,
 		}
 
 		err = tmpl.ExecuteTemplate(w, "layout-base", data)
 		if err != nil {
 			fmt.Println(err)
 		}
+	})
+
+	r.Put(apiVersion+"/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
+		employeeController.UpdateByID(w, r)
 	})
 
 	return r
