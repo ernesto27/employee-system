@@ -23,6 +23,7 @@ type TemplateData struct {
 	Employees    []models.Employee
 	Roles        []models.Role
 	Technologies []models.Technology
+	Employee     models.Employee
 	URL          string
 }
 
@@ -144,7 +145,7 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	})
 
 	r.Get("/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
-		tmpl, err := template.ParseFiles("templates/employee_detail.html")
+		tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-detail.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -162,7 +163,16 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, employee)
+
+		data := TemplateData{
+			Employee: employee,
+			URL:      url,
+		}
+
+		err = tmpl.ExecuteTemplate(w, "layout-base", data)
+		if err != nil {
+			fmt.Println(err)
+		}
 	})
 
 	return r

@@ -75,18 +75,29 @@ func (employeeService *EmployeeService) GetAll(page int) ([]Employee, error) {
 
 func (employeeService *EmployeeService) GetByID(id int) (Employee, error) {
 	var employee Employee
+	var endWorkDate sql.NullString
+	var updatedAt sql.NullString
+
 	err := employeeService.DB.QueryRow(`
 		SELECT 
 			id, name, email, 
-			age, start_work_date, end_work_date,
+			date_birth, start_work_date, end_work_date,
 			created_at, updated_at, image
 		FROM employees WHERE id = ?`, id).Scan(
 		&employee.ID, &employee.Name, &employee.Email,
-		&employee.DateBirth, &employee.StartWorkDate, &employee.EndWorkDate,
-		&employee.CreatedAt, &employee.UpdatedAt, &employee.Image,
+		&employee.DateBirth, &employee.StartWorkDate, &endWorkDate,
+		&employee.CreatedAt, &updatedAt, &employee.Image,
 	)
 	if err != nil {
 		return employee, err
+	}
+
+	if endWorkDate.Valid {
+		employee.EndWorkDate = endWorkDate.String
+	}
+
+	if updatedAt.Valid {
+		employee.UpdatedAt = updatedAt.String
 	}
 
 	return employee, nil
