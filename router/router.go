@@ -20,9 +20,10 @@ import (
 )
 
 type TemplateData struct {
-	Employees []models.Employee
-	Roles     []models.Role
-	URL       string
+	Employees    []models.Employee
+	Roles        []models.Role
+	Technologies []models.Technology
+	URL          string
 }
 
 func GetRouter(dbInstance *sql.DB) *chi.Mux {
@@ -35,6 +36,10 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	}
 
 	roleService := models.RoleService{
+		DB: dbInstance,
+	}
+
+	technologyService := models.TechnologyService{
 		DB: dbInstance,
 	}
 
@@ -116,9 +121,16 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
+		technologies, err := technologyService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		data := TemplateData{
-			URL:   url,
-			Roles: roles,
+			URL:          url,
+			Roles:        roles,
+			Technologies: technologies,
 		}
 
 		err = tmpl.ExecuteTemplate(w, "layout-base", data)

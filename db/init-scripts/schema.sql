@@ -126,3 +126,11 @@ INSERT INTO technologies (name, description) VALUES
 INSERT INTO projects_technologies (project_id, technology_id) VALUES
 (1, 1),
 (2, 2);
+
+CREATE TABLE employees_technologies (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT,
+    technology_id INT,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (technology_id) REFERENCES technologies(id)
+);

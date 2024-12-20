@@ -64,6 +64,21 @@
                     </div>
                 </div>
 
+                <!-- Technologies Section -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+                        Technologies
+                    </label>
+                    <div class="grid grid-cols-3 gap-4">
+                        {{range .Technologies}}
+                        <label class="flex items-center mb-2">
+                            <input type="checkbox" name="technologies" value="{{.ID}}" class="form-checkbox" />
+                            <span class="text-sm ml-2">{{.Name}}</span>
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
+
                 <!-- Active Status -->
                 <div class="mb-4">
                     <label class="flex items-center">
@@ -109,6 +124,16 @@
             });
         });
         formEntries.roles = roles;
+
+        // Convert technologies to the specified format
+        const technologies = [];
+        form.querySelectorAll('input[name="technologies"]:checked').forEach(techCheckbox => {
+            technologies.push({
+                id: parseInt(techCheckbox.value, 10),
+                name: techCheckbox.nextElementSibling.textContent.trim()
+            });
+        });
+        formEntries.technologies = technologies;
 
         const jsonBody = JSON.stringify(formEntries);
         const postData = new FormData();

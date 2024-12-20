@@ -5,17 +5,18 @@ import (
 )
 
 type Employee struct {
-	ID            int    `json:"id"`
-	Name          string `json:"name"`
-	Email         string `json:"email"`
-	DateBirth     string `json:"dateBirth"`
-	Image         string `json:"images"`
-	StartWorkDate string `json:"startWorkDate"`
-	EndWorkDate   string `json:"endWorkDate"`
-	Active        bool   `json:"active"`
-	CreatedAt     string `json:"created_at"`
-	UpdatedAt     string `json:"updated_at"`
-	Roles         []Role `json:"roles"`
+	ID            int          `json:"id"`
+	Name          string       `json:"name"`
+	Email         string       `json:"email"`
+	DateBirth     string       `json:"dateBirth"`
+	Image         string       `json:"images"`
+	StartWorkDate string       `json:"startWorkDate"`
+	EndWorkDate   string       `json:"endWorkDate"`
+	Active        bool         `json:"active"`
+	CreatedAt     string       `json:"created_at"`
+	UpdatedAt     string       `json:"updated_at"`
+	Roles         []Role       `json:"roles"`
+	Technologies  []Technology `json:"technologies"`
 }
 
 type EmployeeService struct {
@@ -116,6 +117,15 @@ func (employeeService *EmployeeService) Create(employee Employee) (int, error) {
 	rolService := RoleService{Transaction: tx}
 	for _, role := range employee.Roles {
 		err := rolService.AssociateRolEmployee(int(id), role.ID)
+		if err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	technologyService := TechnologyService{Transaction: tx}
+	for _, technology := range employee.Technologies {
+		err := technologyService.AssociateTechnologyEmployee(int(id), technology.ID)
 		if err != nil {
 			tx.Rollback()
 			return 0, err
