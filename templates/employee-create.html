@@ -1,99 +1,114 @@
 {{define "content"}}
 <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-    <!-- Add padding to the main section -->
-    <div class="p-4">
-        <h1 class="font-semibold text-slate-800 dark:text-slate-100 mb-4">Create New Employee</h1>
-        <div class="bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700 w-full">
-            <div class="p-6">
-                <form id="employeeForm" action="/admin/employees/create" method="POST" enctype="multipart/form-data" onsubmit="handleSubmit(event)">
-                    <!-- ID Field (usually auto-generated, but included as hidden) -->
-                    <input type="hidden" id="id" name="id">
-                    
-                    <!-- Name and Email Fields -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="name">
-                                Name <span class="text-rose-500">*</span>
-                            </label>
-                            <input id="name" name="name" class="form-input w-full" type="text" required />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="email">
-                                Email <span class="text-rose-500">*</span>
-                            </label>
-                            <input id="email" name="email" class="form-input w-full" type="email" required />
-                        </div>
-                    </div>
+    <!-- Page header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Create Employee</h1>
+    </div>
 
-                    <!-- Date of Birth and Start Work Date Fields -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="dateBirth">
-                                Date of Birth <span class="text-rose-500">*</span>
-                            </label>
-                            <input id="dateBirth" name="dateBirth" class="form-input w-full" type="date" required />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="startWorkDate">
-                                Start Work Date <span class="text-rose-500">*</span>
-                            </label>
-                            <input id="startWorkDate" name="startWorkDate" class="form-input w-full" type="date" required />
+    <div class="bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700">
+        <div class="p-6">
+            <form id="employeeForm" action="/admin/employees/create" method="POST" enctype="multipart/form-data" onsubmit="handleSubmit(event)">
+                <!-- Form sections with consistent spacing -->
+                <div class="space-y-8">
+                    <!-- Basic Information -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Basic Information</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="name">
+                                    Name <span class="text-rose-500">*</span>
+                                </label>
+                                <input id="name" name="name" class="form-input w-full" type="text" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="email">
+                                    Email <span class="text-rose-500">*</span>
+                                </label>
+                                <input id="email" name="email" class="form-input w-full" type="email" required />
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Image Upload -->
-                    <div class="mb-8">
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="image">
-                            Profile Image
-                        </label>
-                        <input id="image" name="image" class="form-input w-full" type="file" accept="image/*" />
-                    </div>
-
-                    <!-- Roles Section -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
-                            Roles
-                        </label>
-                        <div class="grid grid-cols-3 gap-4">
-                            {{range .Roles}}
-                            <label class="flex items-center mb-2">
-                                <input type="checkbox" name="roles" value="{{.ID}}" class="form-checkbox" />
-                                <span class="text-sm ml-2">{{.Name}}</span>
-                            </label>
-                            {{end}}
+                    <!-- Dates -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Dates</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="dateBirth">
+                                    Date of Birth <span class="text-rose-500">*</span>
+                                </label>
+                                <input id="dateBirth" name="dateBirth" class="form-input w-full" type="date" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1" for="startWorkDate">
+                                    Start Work Date <span class="text-rose-500">*</span>
+                                </label>
+                                <input id="startWorkDate" name="startWorkDate" class="form-input w-full" type="date" required />
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Technologies Section -->
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
-                            Technologies
-                        </label>
-                        <div class="grid grid-cols-3 gap-4">
-                            {{range .Technologies}}
-                            <label class="flex items-center mb-2">
-                                <input type="checkbox" name="technologies" value="{{.ID}}" class="form-checkbox" />
-                                <span class="text-sm ml-2">{{.Name}}</span>
+                    <!-- Roles -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Roles</h2>
+                        <div class="mb-8">
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+                                Roles
                             </label>
-                            {{end}}
+                            <div class="grid grid-cols-3 gap-4">
+                                {{range .Roles}}
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" name="roles" value="{{.ID}}" class="form-checkbox" />
+                                    <span class="text-sm ml-2">{{.Name}}</span>
+                                </label>
+                                {{end}}
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Active Status -->
-                    <div class="mb-4">
-                        <label class="flex items-center">
-                            <input type="checkbox" name="active" class="form-checkbox" checked />
-                            <span class="text-sm ml-2">Active Employee</span>
-                        </label>
+                    <!-- Technologies -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Technologies</h2>
+                        <div class="mb-8">
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+                                Technologies
+                            </label>
+                            <div class="grid grid-cols-3 gap-4">
+                                {{range .Technologies}}
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" name="technologies" value="{{.ID}}" class="form-checkbox" />
+                                    <span class="text-sm ml-2">{{.Name}}</span>
+                                </label>
+                                {{end}}
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Submit Button -->
-                    <div class="flex items-center justify-end mt-6">
-                        <button type="button" class="btn border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300 mr-2">Cancel</button>
-                        <button type="submit" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">Create Employee</button>
+                    <!-- Projects -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Projects</h2>
+                        <div class="mb-8">
+                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
+                                Projects
+                            </label>
+                            <div class="grid grid-cols-3 gap-4">
+                                {{range .Projects}}
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" name="projects" value="{{.ID}}" class="form-checkbox" />
+                                    <span class="text-sm ml-2">{{.Name}}</span>
+                                </label>
+                                {{end}}
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <!-- Submit Section -->
+                <div class="mt-8 flex justify-end gap-4">
+                    <button type="button" class="btn border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300">Cancel</button>
+                    <button type="submit" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">Create Employee</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -135,6 +150,16 @@
             });
         });
         formEntries.technologies = technologies;
+
+        // Convert projects to the specified format
+        const projects = [];
+        form.querySelectorAll('input[name="projects"]:checked').forEach(projectCheckbox => {
+            projects.push({
+                id: parseInt(projectCheckbox.value, 10),
+                name: projectCheckbox.nextElementSibling.textContent.trim()
+            });
+        });
+        formEntries.projects = projects;
 
         const jsonBody = JSON.stringify(formEntries);
         const postData = new FormData();

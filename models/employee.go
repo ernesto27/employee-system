@@ -18,6 +18,7 @@ type Employee struct {
 	UpdatedAt     string       `json:"updated_at"`
 	Roles         []Role       `json:"roles"`
 	Technologies  []Technology `json:"technologies"`
+	Projects      []Project    `json:"projects"`
 }
 
 type EmployeeService struct {
@@ -115,6 +116,13 @@ func (employeeService *EmployeeService) GetByID(id int) (Employee, error) {
 	}
 	employee.Technologies = technologies
 
+	projectService := ProjectService{DB: employeeService.DB}
+	projects, err := projectService.GetByEmployeeID(id)
+	if err != nil {
+		return employee, err
+	}
+	employee.Projects = projects
+
 	return employee, nil
 }
 
@@ -159,6 +167,15 @@ func (employeeService *EmployeeService) Create(employee Employee) (int, error) {
 	technologyService := TechnologyService{Transaction: tx}
 	for _, technology := range employee.Technologies {
 		err := technologyService.AssociateTechnologyEmployee(int(id), technology.ID)
+		if err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
+
+	projectService := ProjectService{Transaction: tx}
+	for _, project := range employee.Projects {
+		err := projectService.AssociateProjectEmployee(int(id), project.ID)
 		if err != nil {
 			tx.Rollback()
 			return 0, err
@@ -218,7 +235,6 @@ func (employeeService *EmployeeService) UpdateByID(employee Employee) error {
 	}
 
 	technologyService := TechnologyService{Transaction: tx}
-
 	err = technologyService.RemoveByEmployeeID(employee.ID)
 	if err != nil {
 		tx.Rollback()
@@ -227,6 +243,21 @@ func (employeeService *EmployeeService) UpdateByID(employee Employee) error {
 
 	for _, technology := range employee.Technologies {
 		err := technologyService.AssociateTechnologyEmployee(employee.ID, technology.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	projectService := ProjectService{Transaction: tx}
+	err = projectService.RemoveByEmployeeID(employee.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	for _, project := range employee.Projects {
+		err := projectService.AssociateProjectEmployee(employee.ID, project.ID)
 		if err != nil {
 			tx.Rollback()
 			return err

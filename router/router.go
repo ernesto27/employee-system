@@ -23,6 +23,7 @@ type TemplateData struct {
 	Employees    []models.Employee
 	Roles        []models.Role
 	Technologies []models.Technology
+	Projects     []models.Project
 	Employee     models.Employee
 	URL          string
 }
@@ -41,6 +42,10 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	}
 
 	technologyService := models.TechnologyService{
+		DB: dbInstance,
+	}
+
+	projectService := models.ProjectService{
 		DB: dbInstance,
 	}
 
@@ -128,10 +133,17 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
+		projectService, err := projectService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		data := TemplateData{
 			URL:          url,
 			Roles:        roles,
 			Technologies: technologies,
+			Projects:     projectService,
 		}
 
 		err = tmpl.ExecuteTemplate(w, "layout-base", data)
@@ -156,6 +168,14 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		"hasTechnology": func(techID int, employeeTechs []models.Technology) bool {
 			for _, t := range employeeTechs {
 				if t.ID == techID {
+					return true
+				}
+			}
+			return false
+		},
+		"hasProject": func(projectID int, employeeProjects []models.Project) bool {
+			for _, p := range employeeProjects {
+				if p.ID == projectID {
 					return true
 				}
 			}
@@ -195,12 +215,17 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
-		fmt.Println(roles)
+		projects, err := projectService.GetAll()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		data := TemplateData{
 			Employee:     employee,
 			Roles:        roles,
 			Technologies: technologies,
+			Projects:     projects,
 			URL:          url,
 		}
 

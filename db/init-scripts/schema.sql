@@ -110,7 +110,17 @@ INSERT INTO employees_roles (employee_id, role_id) VALUES
 
 INSERT INTO projects (name, description, start_date, end_date, active, images, links, contacts, notes) VALUES
 ('Project Alpha', 'Description of Project Alpha', '2022-01-01 09:00:00', '2022-12-31 17:00:00', TRUE, 'image1.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Alpha'),
-('Project Beta', 'Description of Project Beta', '2021-06-01 09:00:00', '2021-12-31 17:00:00', TRUE, 'image2.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Beta');
+('Project Beta', 'Description of Project Beta', '2021-06-01 09:00:00', '2021-12-31 17:00:00', TRUE, 'image2.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Beta'),
+('Project Gamma', 'Description of Project Gamma', '2023-01-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image3.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Gamma'),
+('Project Delta', 'Description of Project Delta', '2023-02-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image4.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Delta'),
+('Project Epsilon', 'Description of Project Epsilon', '2023-03-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image5.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Epsilon'),
+('Project Zeta', 'Description of Project Zeta', '2023-04-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image6.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Zeta'),
+('Project Eta', 'Description of Project Eta', '2023-05-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image7.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Eta'),
+('Project Theta', 'Description of Project Theta', '2023-06-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image8.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Theta'),
+('Project Iota', 'Description of Project Iota', '2023-07-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image9.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Iota'),
+('Project Kappa', 'Description of Project Kappa', '2023-08-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image10.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Kappa'),
+('Project Lambda', 'Description of Project Lambda', '2023-09-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image11.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Lambda'),
+('Project Mu', 'Description of Project Mu', '2023-10-01 09:00:00', '2023-12-31 17:00:00', TRUE, 'image12.jpg', 'http://example.com', 'contact@example.com', 'Notes about Project Mu');
 
 INSERT INTO employees_projects (employee_id, project_id, start_date, end_date) VALUES
 (1, 1, '2022-01-01 09:00:00', '2022-12-31 17:00:00'),

@@ -1,72 +1,91 @@
 {{define "content"}}
 <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-    <!-- Add padding to the main section -->
-    <div class="p-4">
-        <div class="bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700 w-full">
-            <header class="px-5 py-4 flex justify-between items-center">
-                <h2 class="font-semibold text-slate-800 dark:text-slate-100">Employee Details</h2>
-                <button id="edit-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    <!-- Page header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Employee Details</h1>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">{{.Employee.Name}}</h2>
+                <button id="edit-button" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">
                     Edit
                 </button>
-            </header>
-            <div class="p-6">
-                <h2 class="text-2xl font-semibold mb-2">{{.Employee.Name}}</h2>
-                <form id="employeeForm" action="/admin/employees/{{.Employee.ID}}" method="POST" enctype="multipart/form-data" onsubmit="handleSubmit(event)">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Email:</label>
-                            <input type="text" name="email" value="{{.Employee.Email}}" disabled class="form-input w-full">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Date of Birth:</label>
-                            <input type="text" name="dateBirth" value="{{.Employee.DateBirth}}" disabled class="form-input w-full">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Start Work Date:</label>
-                            <input type="date" name="startWorkDate" value="{{.Employee.StartWorkDate}}" disabled class="form-input w-full">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">End Work Date:</label>
-                            <input type="date" name="endWorkDate" value="{{.Employee.EndWorkDate}}" disabled class="form-input w-full">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Created At:</label>
-                            <input type="text" name="createdAt" value="{{.Employee.CreatedAt}}" disabled class="form-input w-full">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Updated At:</label>
-                            <input type="text" name="updatedAt" value="{{.Employee.UpdatedAt}}" disabled class="form-input w-full" id="updated-at">
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Roles:</label>
-                        <ul class="list-disc list-inside">
-                            {{range .Roles}}
-                                {{$roleID := .ID}}
-                                <input type="checkbox" name="roles" value="{{$roleID}}" {{if hasRole $roleID $.Employee.Roles}}checked{{end}} disabled class="form-checkbox mr-2"> {{.Name}}
-                            {{end}}
-                        </ul>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Technologies:</label>
-                        <ul class="list-disc list-inside">
-                            {{range .Technologies}}
-                                {{$techID := .ID}}
-                                <input type="checkbox" name="technologies" value="{{$techID}}" {{if hasTechnology $techID $.Employee.Technologies}}checked{{end}} disabled class="form-checkbox mr-2"> {{.Name}}
-                            {{end}}
-                        </ul>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Active:</label>
-                        <input type="checkbox" name="active" {{if .Employee.Active}}checked{{end}} disabled class="form-checkbox mr-2">
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="submit" id="submit-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded hidden">
-                            Submit
-                        </button>
-                    </div>
-                </form>
             </div>
+            <form id="employeeForm" action="/admin/employees/{{.Employee.ID}}" method="POST" enctype="multipart/form-data" onsubmit="handleSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Email:</label>
+                        <input type="text" name="email" value="{{.Employee.Email}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Date of Birth:</label>
+                        <input type="text" name="dateBirth" value="{{.Employee.DateBirth}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Start Work Date:</label>
+                        <input type="date" name="startWorkDate" value="{{.Employee.StartWorkDate}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">End Work Date:</label>
+                        <input type="date" name="endWorkDate" value="{{.Employee.EndWorkDate}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Created At:</label>
+                        <input type="text" name="createdAt" value="{{.Employee.CreatedAt}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Updated At:</label>
+                        <input type="text" name="updatedAt" value="{{.Employee.UpdatedAt}}" disabled class="form-input w-full" id="updated-at">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Roles:</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        {{range .Roles}}
+                        <label class="flex items-center mb-2">
+                            {{$roleID := .ID}}
+                            <input type="checkbox" name="roles" value="{{$roleID}}" {{if hasRole $roleID $.Employee.Roles}}checked{{end}} disabled class="form-checkbox mr-2"> 
+                            <span class="text-sm ml-2">{{.Name}}</span>
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Technologies:</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        {{range .Technologies}}
+                        <label class="flex items-center mb-2">
+                            {{$techID := .ID}}
+                            <input type="checkbox" name="technologies" value="{{$techID}}" {{if hasTechnology $techID $.Employee.Technologies}}checked{{end}} disabled class="form-checkbox mr-2"> 
+                            <span class="text-sm ml-2">{{.Name}}</span>
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Projects:</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        {{range .Projects}}
+                        <label class="flex items-center mb-2">
+                            {{$projectID := .ID}}
+                            <input type="checkbox" name="projects" value="{{$projectID}}" {{if hasProject $projectID $.Employee.Projects}}checked{{end}} disabled class="form-checkbox mr-2"> 
+                            <span class="text-sm ml-2">{{.Name}} - {{.Description}}</span>
+                        </label>
+                        {{end}}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Active:</label>
+                    <input type="checkbox" name="active" {{if .Employee.Active}}checked{{end}} disabled class="form-checkbox mr-2">
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" id="submit-button" class="btn bg-indigo-500 hover:bg-indigo-600 text-white font-medium hidden">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -112,7 +131,6 @@
         form.querySelectorAll('input[name="roles"]:checked').forEach(roleCheckbox => {
             roles.push({
                 id: parseInt(roleCheckbox.value, 10),
-                name: roleCheckbox.nextElementSibling.textContent.trim()
             });
         });
         formEntries.roles = roles;
@@ -122,10 +140,18 @@
         form.querySelectorAll('input[name="technologies"]:checked').forEach(techCheckbox => {
             technologies.push({
                 id: parseInt(techCheckbox.value, 10),
-                name: techCheckbox.nextElementSibling.textContent.trim()
             });
         });
         formEntries.technologies = technologies;
+
+        // Convert projects to the specified format
+        const projects = [];
+        form.querySelectorAll('input[name="projects"]:checked').forEach(projectCheckbox => {
+            projects.push({
+                id: parseInt(projectCheckbox.value, 10),
+            });
+        });
+        formEntries.projects = projects;
 
         // Format date fields to YYYY-MM-DD if they are valid
         if (formEntries.startWorkDate) {
