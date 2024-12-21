@@ -261,8 +261,38 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	})
 
 	// Session routes
-	r.Get("/admin/login", RenderLogin)
-	r.Post("/admin/login", Login)
+	r.Get("/admin/login", func(w http.ResponseWriter, r *http.Request) {
+		tmpl, err := template.ParseFiles("templates/login.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data := utils.TemplateData{
+			URL: utils.URL,
+		}
+		err = tmpl.Execute(w, data)
+		if err != nil {
+			fmt.Println(err)
+		}
+	})
+
+	r.Post("/admin/login", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+
+		// Validate user credentials (this is just an example, use a proper user service)
+		if username == "admin" && bcrypt.CompareHashAndPassword([]byte("$2a$10$7a8b9c8d7e6f5g4h3i2j1k"), []byte(password)) == nil {
+			session, _ := store.Get(r, "session-name")
+			session.Values["authenticated"] = true
+			session.Save(r, w)
+			http.Redirect(w, r, "/admin/dashboard", http.StatusFound)
+		} else {
+			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		}
+	})
+
 	r.Get("/admin/logout", Logout)
 
 	// Protect routes
@@ -272,26 +302,6 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	})
 
 	return r
-}
-
-func RenderLogin(w http.ResponseWriter, r *http.Request) {
-	// Render login page
-}
-
-func Login(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	username := r.FormValue("username")
-	password := r.FormValue("password")
-
-	// Validate user credentials (this is just an example, use a proper user service)
-	if username == "admin" && bcrypt.CompareHashAndPassword([]byte("$2a$10$7a8b9c8d7e6f5g4h3i2j1k"), []byte(password)) == nil {
-		session, _ := store.Get(r, "session-name")
-		session.Values["authenticated"] = true
-		session.Save(r, w)
-		http.Redirect(w, r, "/admin/dashboard", http.StatusFound)
-	} else {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
-	}
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {

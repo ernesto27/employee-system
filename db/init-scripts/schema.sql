@@ -173,6 +173,6 @@ INSERT INTO projects_technologies (project_id, technology_id) VALUES
 (1, 1),
 (2, 2);
 
+
 INSERT INTO admins (username, password, email) VALUES
-('admin', '$2a$10$ZGX.ks8XdY8h.ZV3o8lKqOWmUqzBOvFZB6e3hN0Q7RD5P5Q5Z5Q5Q', 'admin@example.com'),
-('moderator', '$2a$10$ZGX.ks8XdY8h.ZV3o8lKqOWmUqzBOvFZB6e3hN0Q7RD5P5Q5Z5Q5Q', 'moderator@example.com');
+('admin', '$2a$10$wH8n5Z6Jz8G8hZ7Z8lKqOWmUqzBOvFZB6e3hN0Q7RD5P5Q5Z5Q5Q', 'admin@example.com');
