@@ -27,7 +27,9 @@ func (project *Project) RenderList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projects, err := project.ProjectService.GetAll(page)
+	nameQuery := r.URL.Query().Get("name")
+
+	projects, err := project.ProjectService.GetAll(page, nameQuery)
 	if err != nil {
 		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

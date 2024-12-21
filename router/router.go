@@ -123,7 +123,7 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
-		projectService, err := projectService.GetAll(-1)
+		projectService, err := projectService.GetAll(-1, "")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -205,7 +205,7 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
-		projects, err := projectService.GetAll(-1)
+		projects, err := projectService.GetAll(-1, "")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

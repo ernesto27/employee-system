@@ -16,16 +16,27 @@ type ProjectService struct {
 	Transaction *sql.Tx
 }
 
-func (projectService *ProjectService) GetAll(page int) ([]Project, error) {
+func (projectService *ProjectService) GetAll(page int, searchName string) ([]Project, error) {
 	var rows *sql.Rows
 	var err error
+	var query string
+	var args []interface{}
+
+	baseQuery := `
+		SELECT id, name, description, start_date, end_date, active 
+		FROM projects
+		WHERE 1=1`
+
+	if searchName != "" {
+		baseQuery += ` AND name LIKE ?`
+		args = append(args, "%"+searchName+"%")
+	}
+
+	baseQuery += ` ORDER BY id DESC`
 
 	if page == -1 {
-		rows, err = projectService.DB.Query(`
-			SELECT id, name, description, start_date, end_date, active 
-			FROM projects
-			ORDER BY id DESC
-		`)
+		query = baseQuery
+		rows, err = projectService.DB.Query(query, args...)
 	} else {
 		offset := 0
 		limit := 10
@@ -34,13 +45,9 @@ func (projectService *ProjectService) GetAll(page int) ([]Project, error) {
 			offset = (page - 1) * limit
 		}
 
-		rows, err = projectService.DB.Query(`
-			SELECT id, name, description, start_date, end_date, active 
-			FROM projects
-			ORDER BY id DESC
-			LIMIT ? OFFSET ?`,
-			limit, offset,
-		)
+		query = baseQuery + ` LIMIT ? OFFSET ?`
+		args = append(args, limit, offset)
+		rows, err = projectService.DB.Query(query, args...)
 	}
 
 	if err != nil {
