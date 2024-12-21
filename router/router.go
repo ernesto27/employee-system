@@ -240,6 +240,14 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		projectController.RenderList(w, r)
 	})
 
+	r.Get("/admin/projects/create", func(w http.ResponseWriter, r *http.Request) {
+		projectController.RenderCreate(w, r)
+	})
+
+	r.Post(apiVersion+"/admin/projects/create", func(w http.ResponseWriter, r *http.Request) {
+		projectController.Create(w, r)
+	})
+
 	return r
 }
 

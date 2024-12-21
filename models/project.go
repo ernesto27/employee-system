@@ -9,6 +9,8 @@ type Project struct {
 	StartDate   string `json:"start_date"`
 	EndDate     string `json:"end_date"`
 	Active      bool   `json:"active"`
+	Links       string `json:"links"`
+	Contacts    string `json:"contacts"`
 }
 
 type ProjectService struct {
@@ -58,17 +60,46 @@ func (projectService *ProjectService) GetAll(page int, searchName string) ([]Pro
 	var projects []Project
 	for rows.Next() {
 		var project Project
+		var endDate sql.NullString
+
 		err := rows.Scan(
 			&project.ID, &project.Name, &project.Description,
-			&project.StartDate, &project.EndDate, &project.Active,
+			&project.StartDate, &endDate, &project.Active,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		if endDate.Valid {
+			project.EndDate = endDate.String
+		}
+
 		projects = append(projects, project)
 	}
 
 	return projects, nil
+}
+
+func (projectService *ProjectService) Create(project Project) error {
+	var endDate interface{}
+	if project.EndDate == "" {
+		endDate = nil
+	} else {
+		endDate = project.EndDate
+	}
+
+	_, err := projectService.DB.Exec(`
+		INSERT INTO projects (name, description, start_date, end_date, active, links, contacts)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		project.Name, project.Description,
+		project.StartDate, endDate, project.Active,
+		project.Links, project.Contacts,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (projectService *ProjectService) AssociateProjectEmployee(employeeID, projectID int) error {
