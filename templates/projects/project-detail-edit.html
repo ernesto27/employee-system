@@ -1,0 +1,133 @@
+{{define "content"}}
+<div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
+    <!-- Page header -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Project Details</h1>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100">{{.Project.Name}}</h2>
+                <button id="edit-button" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">
+                    Edit
+                </button>
+            </div>
+            <form id="projectForm" action="/admin/projects/{{.Project.ID}}" method="POST" onsubmit="handleSubmit(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Name:</label>
+                        <input type="text" name="name" value="{{.Project.Name}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Description:</label>
+                        <input type="text" name="description" value="{{.Project.Description}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Start Date:</label>
+                        <input type="date" name="start_date" value="{{.Project.StartDate}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">End Date:</label>
+                        <input type="date" name="end_date" value="{{.Project.EndDate}}" disabled class="form-input w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Links:</label>
+                        <textarea name="links" disabled class="form-input w-full h-24">{{.Project.Links}}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Contacts:</label>
+                        <textarea name="contacts" disabled class="form-input w-full h-24">{{.Project.Contacts}}</textarea>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Active:</label>
+                    <input type="checkbox" name="active" {{if .Project.Active}}checked{{end}} disabled class="form-checkbox mr-2">
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" id="submit-button" class="btn bg-indigo-500 hover:bg-indigo-600 text-white font-medium hidden">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('edit-button').addEventListener('click', function() {
+        const inputs = document.querySelectorAll('.form-input, .form-checkbox');
+        const editButton = document.getElementById('edit-button');
+        const submitButton = document.getElementById('submit-button');
+        
+        if (editButton.textContent.trim() === 'Edit') {
+            inputs.forEach(input => input.disabled = false);
+            editButton.textContent = 'Cancel';
+            submitButton.classList.remove('hidden');
+        } else {
+            inputs.forEach(input => input.disabled = true);
+            editButton.textContent = 'Edit';
+            submitButton.classList.add('hidden');
+        }
+    });
+
+    async function handleSubmit(event) {
+        event.preventDefault();
+
+        const form = document.getElementById('projectForm');
+        const formData = new FormData(form);
+        const formEntries = Object.fromEntries(formData.entries());
+
+        // Convert 'active' to boolean
+        formEntries.active = formEntries.active === 'on';
+
+        // Format dates
+        if (formEntries.start_date) {
+            const startDate = new Date(formEntries.start_date);
+            if (!isNaN(startDate)) {
+                formEntries.start_date = startDate.toISOString().split('T')[0];
+            }
+        }
+        if (formEntries.end_date) {
+            const endDate = new Date(formEntries.end_date);
+            if (!isNaN(endDate)) {
+                formEntries.end_date = endDate.toISOString().split('T')[0];
+            }
+        }
+
+        const jsonBody = JSON.stringify(formEntries);
+        const postData = new FormData();
+        postData.append('jsonBody', jsonBody);
+
+        try {
+            const projectId = window.location.pathname.split('/').pop();
+            const response = await fetch(`http://localhost:8080/api/v1/admin/projects/${projectId}`, {
+                method: 'PUT',
+                body: postData
+            });
+
+            if (response.ok) {
+                alert('Project updated successfully!');
+                window.location.href = '/admin/projects';
+            } else {
+                alert('Failed to update project.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating the project.');
+        }
+    }
+
+    // Format date fields on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            if (input.value) {
+                const date = new Date(input.value);
+                if (!isNaN(date)) {
+                    input.value = date.toISOString().split('T')[0];
+                }
+            }
+        });
+    });
+</script>
+{{end}}

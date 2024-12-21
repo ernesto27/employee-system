@@ -17,8 +17,12 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/gorilla/sessions"
 	"github.com/rs/cors"
+	"golang.org/x/crypto/bcrypt"
 )
+
+var store = sessions.NewCookieStore([]byte("your-secret-key"))
 
 func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	const apiVersion = "/api/v1"
@@ -248,7 +252,68 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		projectController.Create(w, r)
 	})
 
+	r.Get("/admin/projects/{id}", func(w http.ResponseWriter, r *http.Request) {
+		projectController.RenderDetailEdit(w, r)
+	})
+
+	r.Put(apiVersion+"/admin/projects/{id}", func(w http.ResponseWriter, r *http.Request) {
+		projectController.UpdateByID(w, r)
+	})
+
+	// Session routes
+	r.Get("/admin/login", RenderLogin)
+	r.Post("/admin/login", Login)
+	r.Get("/admin/logout", Logout)
+
+	// Protect routes
+	r.Group(func(r chi.Router) {
+		r.Use(AuthMiddleware)
+		r.Get("/admin/dashboard", AdminDashboard)
+	})
+
 	return r
+}
+
+func RenderLogin(w http.ResponseWriter, r *http.Request) {
+	// Render login page
+}
+
+func Login(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	// Validate user credentials (this is just an example, use a proper user service)
+	if username == "admin" && bcrypt.CompareHashAndPassword([]byte("$2a$10$7a8b9c8d7e6f5g4h3i2j1k"), []byte(password)) == nil {
+		session, _ := store.Get(r, "session-name")
+		session.Values["authenticated"] = true
+		session.Save(r, w)
+		http.Redirect(w, r, "/admin/dashboard", http.StatusFound)
+	} else {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+	}
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "session-name")
+	session.Values["authenticated"] = false
+	session.Save(r, w)
+	http.Redirect(w, r, "/admin/login", http.StatusFound)
+}
+
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, _ := store.Get(r, "session-name")
+		if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func AdminDashboard(w http.ResponseWriter, r *http.Request) {
+	// Render admin dashboard
 }
 
 // FileServer conveniently sets up a http.FileServer handler to serve static files from a http.FileSystem.

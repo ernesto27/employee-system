@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi"
 )
 
 type Project struct {
@@ -61,6 +63,63 @@ func (project *Project) RenderCreate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		fmt.Println(err)
 	}
+}
+
+var tmplDetailEdit = template.Must(template.ParseFiles("templates/layout-base.html", "templates/projects/project-detail-edit.html"))
+
+func (project *Project) RenderDetailEdit(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	projectDetail, err := project.ProjectService.GetByID(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	templateData := utils.TemplateData{
+		URL:     utils.URL,
+		Project: projectDetail,
+	}
+
+	err = tmplDetailEdit.ExecuteTemplate(w, "layout-base", templateData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err)
+	}
+}
+
+func (project *Project) UpdateByID(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
+	}
+
+	var newProject models.Project
+	jsonString := r.FormValue("jsonBody")
+	err = json.NewDecoder(strings.NewReader(jsonString)).Decode(&newProject)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Unable to decode JSON", http.StatusBadRequest)
+		return
+	}
+
+	newProject.ID = id
+
+	err = project.ProjectService.UpdateByID(newProject)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newProject)
 }
 
 func (project *Project) Create(w http.ResponseWriter, r *http.Request) {

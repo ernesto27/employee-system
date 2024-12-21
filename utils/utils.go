@@ -8,6 +8,7 @@ type TemplateData struct {
 	Technologies []models.Technology
 	Projects     []models.Project
 	Employee     models.Employee
+	Project      models.Project
 	URL          string
 }
 

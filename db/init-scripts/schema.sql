@@ -61,6 +61,24 @@ CREATE TABLE projects_technologies (
     FOREIGN KEY (technology_id) REFERENCES technologies(id)
 );
 
+CREATE TABLE employees_technologies (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT,
+    technology_id INT,
+    FOREIGN KEY (employee_id) REFERENCES employees(id),
+    FOREIGN KEY (technology_id) REFERENCES technologies(id)
+);
+
+CREATE TABLE admins (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    active BOOLEAN DEFAULT TRUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 INSERT INTO employees (name, email, date_birth, image, start_work_date, end_work_date, active, created_at, updated_at) VALUES
 ('John Doe', 'john.doe@example.com', '1992-01-01', 'image1.jpg', '2022-01-01', '2023-01-01', TRUE, NOW(), NOW()),
 ('Jane Smith', 'jane.smith@example.com', '1997-01-01', 'image2.jpg', '2021-06-01', '2022-06-01', TRUE, NOW(), NOW());
@@ -155,10 +173,6 @@ INSERT INTO projects_technologies (project_id, technology_id) VALUES
 (1, 1),
 (2, 2);
 
-CREATE TABLE employees_technologies (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    employee_id INT,
-    technology_id INT,
-    FOREIGN KEY (employee_id) REFERENCES employees(id),
-    FOREIGN KEY (technology_id) REFERENCES technologies(id)
-);
+INSERT INTO admins (username, password, email) VALUES
+('admin', '$2a$10$ZGX.ks8XdY8h.ZV3o8lKqOWmUqzBOvFZB6e3hN0Q7RD5P5Q5Z5Q5Q', 'admin@example.com'),
+('moderator', '$2a$10$ZGX.ks8XdY8h.ZV3o8lKqOWmUqzBOvFZB6e3hN0Q7RD5P5Q5Z5Q5Q', 'moderator@example.com');

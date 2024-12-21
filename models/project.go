@@ -25,7 +25,7 @@ func (projectService *ProjectService) GetAll(page int, searchName string) ([]Pro
 	var args []interface{}
 
 	baseQuery := `
-		SELECT id, name, description, start_date, end_date, active 
+		SELECT id, name, description, start_date, end_date, active, links, contacts 
 		FROM projects
 		WHERE 1=1`
 
@@ -65,6 +65,7 @@ func (projectService *ProjectService) GetAll(page int, searchName string) ([]Pro
 		err := rows.Scan(
 			&project.ID, &project.Name, &project.Description,
 			&project.StartDate, &endDate, &project.Active,
+			&project.Links, &project.Contacts,
 		)
 		if err != nil {
 			return nil, err
@@ -78,6 +79,30 @@ func (projectService *ProjectService) GetAll(page int, searchName string) ([]Pro
 	}
 
 	return projects, nil
+}
+
+func (projectService *ProjectService) GetByID(id int) (Project, error) {
+	var project Project
+	var endDate sql.NullString
+
+	err := projectService.DB.QueryRow(`
+		SELECT id, name, description, start_date, end_date, active, links, contacts
+		FROM projects
+		WHERE id = ?
+	`, id).Scan(
+		&project.ID, &project.Name, &project.Description,
+		&project.StartDate, &endDate, &project.Active,
+		&project.Links, &project.Contacts,
+	)
+	if err != nil {
+		return project, err
+	}
+
+	if endDate.Valid {
+		project.EndDate = endDate.String
+	}
+
+	return project, nil
 }
 
 func (projectService *ProjectService) Create(project Project) error {
@@ -144,6 +169,27 @@ func (projectService *ProjectService) RemoveByEmployeeID(employeeID int) error {
 	_, err := projectService.Transaction.Exec(`
 		DELETE FROM employees_projects WHERE employee_id = ?
 	`, employeeID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (projectService *ProjectService) UpdateByID(project Project) error {
+	var endDate interface{}
+	if project.EndDate == "" {
+		endDate = nil
+	} else {
+		endDate = project.EndDate
+	}
+
+	_, err := projectService.DB.Exec(`
+		UPDATE projects
+		SET name = ?, description = ?, start_date = ?, end_date = ?, active = ?, links = ?, contacts = ?
+		WHERE id = ?`,
+		project.Name, project.Description, project.StartDate, endDate, project.Active, project.Links, project.Contacts, project.ID,
+	)
 	if err != nil {
 		return err
 	}
