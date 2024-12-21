@@ -5,6 +5,7 @@ import (
 	"employees-system/controllers"
 	"employees-system/models"
 	"employees-system/response"
+	"employees-system/utils"
 	"errors"
 	"fmt"
 	"html/template"
@@ -18,15 +19,6 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
 )
-
-type TemplateData struct {
-	Employees    []models.Employee
-	Roles        []models.Role
-	Technologies []models.Technology
-	Projects     []models.Project
-	Employee     models.Employee
-	URL          string
-}
 
 func GetRouter(dbInstance *sql.DB) *chi.Mux {
 	const apiVersion = "/api/v1"
@@ -78,8 +70,6 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 		employeeController.GetByID(w, r)
 	})
 
-	url := "http://localhost:8080/admin/public"
-
 	r.Get("/admin/employees", func(w http.ResponseWriter, r *http.Request) {
 		tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-list.html")
 		if err != nil {
@@ -103,9 +93,9 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
-		data := TemplateData{
+		data := utils.TemplateData{
 			Employees: employees,
-			URL:       url,
+			URL:       utils.URL,
 		}
 
 		err = tmpl.ExecuteTemplate(w, "layout-base", data)
@@ -133,14 +123,14 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
-		projectService, err := projectService.GetAll()
+		projectService, err := projectService.GetAll(-1)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		data := TemplateData{
-			URL:          url,
+		data := utils.TemplateData{
+			URL:          utils.URL,
 			Roles:        roles,
 			Technologies: technologies,
 			Projects:     projectService,
@@ -215,18 +205,18 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 			return
 		}
 
-		projects, err := projectService.GetAll()
+		projects, err := projectService.GetAll(-1)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		data := TemplateData{
+		data := utils.TemplateData{
 			Employee:     employee,
 			Roles:        roles,
 			Technologies: technologies,
 			Projects:     projects,
-			URL:          url,
+			URL:          utils.URL,
 		}
 
 		err = tmpl.ExecuteTemplate(w, "layout-base", data)
@@ -237,6 +227,17 @@ func GetRouter(dbInstance *sql.DB) *chi.Mux {
 
 	r.Put(apiVersion+"/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
 		employeeController.UpdateByID(w, r)
+	})
+
+	// Project routes
+	projectController := controllers.Project{
+		ProjectService: models.ProjectService{
+			DB: dbInstance,
+		},
+	}
+
+	r.Get("/admin/projects", func(w http.ResponseWriter, r *http.Request) {
+		projectController.RenderList(w, r)
 	})
 
 	return r

@@ -173,7 +173,7 @@
 
             if (response.ok) {
                 alert('Employee created successfully!');
-                form.reset();
+                window.location.href = '/admin/employees';
             } else {
                 alert('Failed to create employee.');
             }
