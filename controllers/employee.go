@@ -1,19 +1,28 @@
 package controllers
 
 import (
+	"bytes"
+	"employees-system/internal/s3"
 	"employees-system/models"
 	"employees-system/response"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/go-chi/chi"
+	"golang.org/x/exp/rand"
 )
 
 type Employee struct {
 	EmployeeService models.EmployeeService
+	S3Service       s3.MyS3
+	ImageService    models.ImageService
 }
 
 func (employee *Employee) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -62,14 +71,115 @@ func (employee *Employee) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = employee.EmployeeService.Create(newEmployee)
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
+
+	id, err := employee.EmployeeService.Create(newEmployee)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	imagesToSave := []models.Image{}
+	files := r.MultipartForm.File["files"]
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errChan := make(chan error, len(files))
+
+	for _, fileHeader := range files {
+		wg.Add(1)
+		go func(fileHeader *multipart.FileHeader) {
+			defer wg.Done()
+
+			if fileHeader.Size > (3 << 20) {
+				errChan <- fmt.Errorf("file too large")
+				return
+			}
+
+			fmt.Println("Uploading file", fileHeader.Filename)
+
+			file, err := fileHeader.Open()
+			if err != nil {
+				errChan <- err
+				return
+			}
+			defer file.Close()
+
+			var buf bytes.Buffer
+			_, err = io.Copy(&buf, file)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			randomString := generateRandomString(10)
+			path := fmt.Sprintf("employees/%d/%s.%s", id, randomString, filepath.Ext(fileHeader.Filename))
+			err = employee.S3Service.Upload(&buf, path)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			mu.Lock()
+			imagesToSave = append(imagesToSave, models.Image{
+				Path: path,
+			})
+			mu.Unlock()
+		}(fileHeader)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	if len(errChan) > 0 {
+		http.Error(w, (<-errChan).Error(), http.StatusInternalServerError)
+		return
+	}
+
+	tx, err := employee.ImageService.DB.Begin()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	employee.ImageService.SetTransaction(tx)
+
+	for _, image := range imagesToSave {
+		imageID, err := employee.ImageService.Create(&image)
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = employee.ImageService.AssociateImageEmployee(imageID, id)
+		if err != nil {
+			tx.Rollback()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newEmployee)
+}
+
+func generateRandomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, n)
+	for i := range result {
+		result[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(result)
 }
 
 func (employee *Employee) UpdateByID(w http.ResponseWriter, r *http.Request) {

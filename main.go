@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"employees-system/db"
+	"employees-system/internal/s3"
 	"employees-system/router"
 	"fmt"
 	"net/http"
@@ -32,7 +33,14 @@ func main() {
 		panic(err)
 	}
 
-	r := router.GetRouter(dbInstance.Db)
+	// AWS S3
+	awsRegion := os.Getenv("AWS_REGION")
+	awsS3Bucket := os.Getenv("AWS_S3_BUCKET")
+	awsAccesKey := os.Getenv("AWS_ACCESS_KEY")
+	awsSecret := os.Getenv("AWS_SECRET")
+	myS3 := s3.NewS3(awsRegion, awsAccesKey, awsSecret, awsS3Bucket)
+
+	r := router.GetRouter(dbInstance.Db, myS3)
 
 	srv := &http.Server{
 		Addr:    ":8080",

@@ -84,6 +84,30 @@
                         </div>
                     </div>
 
+                    <!-- File Upload -->
+                    <div>
+                        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Imagenes</h2>
+                        <div class="mb-8">
+                            <div id="drop-zone" class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center transition-all duration-200 ease-in-out hover:border-slate-400 dark:hover:border-slate-500 group">
+                                <div class="flex flex-col items-center">
+                                    <div class="transform transition-transform group-hover:scale-110 group-hover:-translate-y-1">
+                                        <svg class="w-12 h-12 text-slate-400 mb-4 transition-colors group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-slate-600 dark:text-slate-400 mb-2">Drag and drop files here or</p>
+                                    <label class="btn bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 cursor-pointer transition-all duration-200 ease-in-out hover:shadow-md">
+                                        <span>Browse Files</span>
+                                        <input type="file" id="fileInput" name="documents" multiple class="hidden" 
+                                            accept="image/*,.png,.jpg,.jpeg,.gif,.webp" />
+                                    </label>
+                                </div>
+                                <div id="file-list" class="mt-4 space-y-2"></div>
+                                <p id="errorMessage" class="text-rose-500 text-sm mt-2 hidden"></p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Projects -->
                     <div>
                         <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Projects</h2>
@@ -106,80 +130,227 @@
                 <!-- Submit Section -->
                 <div class="mt-8 flex justify-end gap-4">
                     <button type="button" class="btn border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300">Cancel</button>
-                    <button type="submit" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">Create Employee</button>
+                    <button type="submit" class="btn bg-indigo-500 hover:bg-indigo-600 text-white flex items-center gap-2">
+                        <span>Create Employee</span>
+                        <svg id="loadingSpinner" class="hidden w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 <script>
+    // File upload handling
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('file-list');
+    let uploadedFiles = new Set();
+
+    // Add allowed file types constant
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropZone.classList.add('scale-[1.02]', 'border-indigo-500', 'bg-indigo-50/50', 'dark:bg-indigo-900/10');
+        dropZone.querySelector('svg').classList.add('text-indigo-500');
+        dropZone.querySelector('p').textContent = 'Drop files here';
+    }
+
+    function unhighlight(e) {
+        dropZone.classList.remove('scale-[1.02]', 'border-indigo-500', 'bg-indigo-50/50', 'dark:bg-indigo-900/10');
+        dropZone.querySelector('svg').classList.remove('text-indigo-500');
+        dropZone.querySelector('p').textContent = 'Drag and drop files here or';
+    }
+
+    dropZone.addEventListener('drop', handleDrop, false);
+    fileInput.addEventListener('change', handleFiles, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = [...dt.files];
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.classList.add('hidden');
+
+        // Validate dropped files
+        const invalidFiles = files.filter(file => !ALLOWED_TYPES.includes(file.type));
+        if (invalidFiles.length > 0) {
+            errorMessage.textContent = `Some files are not allowed. Please only drop image files (PNG, JPG, GIF, WebP).`;
+            errorMessage.classList.remove('hidden');
+            return;
+        }
+
+        handleFiles({ target: { files: dt.files } });
+    }
+
+    function handleFiles(e) {
+        const files = [...e.target.files];
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.classList.add('hidden');
+        
+        files.forEach(file => {
+            // Validate file type
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                errorMessage.textContent = `File "${file.name}" is not an allowed image type. Please use PNG, JPG, GIF, or WebP.`;
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            if (!uploadedFiles.has(file.name)) {
+                uploadedFiles.add(file.name);
+                const fileElement = createFileElement(file);
+                fileList.appendChild(fileElement);
+            }
+        });
+    }
+
+    function createFileElement(file) {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded';
+        
+        // Add image preview
+        const preview = document.createElement('div');
+        preview.className = 'flex items-center gap-2';
+        
+        const img = document.createElement('img');
+        img.className = 'w-8 h-8 object-cover rounded';
+        img.src = URL.createObjectURL(file);
+        
+        const fileInfo = document.createElement('span');
+        fileInfo.className = 'text-sm text-slate-600 dark:text-slate-300';
+        fileInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
+        
+        preview.appendChild(img);
+        preview.appendChild(fileInfo);
+        
+        const removeButton = document.createElement('button');
+        removeButton.className = 'text-rose-500 hover:text-rose-600';
+        removeButton.innerHTML = '&times;';
+        removeButton.onclick = () => {
+            removeFile(file, div);
+        };
+
+        div.appendChild(preview);
+        div.appendChild(removeButton);
+        return div;
+    }
+
+    // Clean up object URLs when removing files
+    function removeFile(file, element) {
+        URL.revokeObjectURL(element.querySelector('img').src);
+        element.remove();
+        uploadedFiles.delete(file.name);
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Modify handleSubmit function
     async function handleSubmit(event) {
         event.preventDefault();
 
-        const form = document.getElementById('employeeForm');
-        const formData = new FormData(form);
-        const formEntries = Object.fromEntries(formData.entries());
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        const loadingSpinner = submitButton.querySelector('#loadingSpinner');
+        const buttonText = submitButton.querySelector('span');
 
-        // Remove 'id' field
-        delete formEntries.id;
-
-        // Convert 'active' to boolean
-        formEntries.active = formEntries.active === 'on';
-
-        // Set 'image' to empty string if not provided
-        if (!formEntries.image) {
-            formEntries.image = '';
-        }
-
-        // Convert roles to the specified format
-        const roles = [];
-        form.querySelectorAll('input[name="roles"]:checked').forEach(roleCheckbox => {
-            roles.push({
-                id: parseInt(roleCheckbox.value, 10),
-                name: roleCheckbox.nextElementSibling.textContent.trim()
-            });
-        });
-        formEntries.roles = roles;
-
-        // Convert technologies to the specified format
-        const technologies = [];
-        form.querySelectorAll('input[name="technologies"]:checked').forEach(techCheckbox => {
-            technologies.push({
-                id: parseInt(techCheckbox.value, 10),
-                name: techCheckbox.nextElementSibling.textContent.trim()
-            });
-        });
-        formEntries.technologies = technologies;
-
-        // Convert projects to the specified format
-        const projects = [];
-        form.querySelectorAll('input[name="projects"]:checked').forEach(projectCheckbox => {
-            projects.push({
-                id: parseInt(projectCheckbox.value, 10),
-                name: projectCheckbox.nextElementSibling.textContent.trim()
-            });
-        });
-        formEntries.projects = projects;
-
-        const jsonBody = JSON.stringify(formEntries);
-        const postData = new FormData();
-        postData.append('jsonBody', jsonBody);
+        // Show loading state
+        submitButton.disabled = true;
+        loadingSpinner.classList.remove('hidden');
+        buttonText.textContent = 'Creating...';
 
         try {
-            const response = await fetch('http://localhost:8080/api/v1/admin/employees/create', {
-                method: 'POST',
-                body: postData
+            const form = document.getElementById('employeeForm');
+            const formData = new FormData(form);
+            const formEntries = Object.fromEntries(formData.entries());
+
+            // Convert 'active' to boolean
+            formEntries.active = formEntries.active === 'on';
+            // Add roles
+            const roles = [];
+            form.querySelectorAll('input[name="roles"]:checked').forEach(roleCheckbox => {
+                roles.push({
+                    id: parseInt(roleCheckbox.value, 10),
+                    name: roleCheckbox.nextElementSibling.textContent.trim()
+                });
+            });
+            formEntries.roles = roles;
+
+            // Add technologies
+            const technologies = [];
+            form.querySelectorAll('input[name="technologies"]:checked').forEach(techCheckbox => {
+                technologies.push({
+                    id: parseInt(techCheckbox.value, 10),
+                    name: techCheckbox.nextElementSibling.textContent.trim()
+                });
+            });
+            formEntries.technologies = technologies;
+
+            // Add projects
+            const projects = [];
+            form.querySelectorAll('input[name="projects"]:checked').forEach(projectCheckbox => {
+                projects.push({
+                    id: parseInt(projectCheckbox.value, 10),
+                    name: projectCheckbox.nextElementSibling.textContent.trim()
+                });
+            });
+            formEntries.projects = projects;
+
+            const jsonBody = JSON.stringify(formEntries);
+            const postData = new FormData();
+            postData.append('jsonBody', jsonBody);
+
+            // Add all files to FormData
+            const fileInput = document.getElementById('fileInput');
+            Array.from(fileInput.files).forEach(file => {
+                postData.append('files', file);
             });
 
-            if (response.ok) {
-                alert('Employee created successfully!');
-                window.location.href = '/admin/employees';
-            } else {
-                alert('Failed to create employee.');
+            const response = await fetch('http://localhost:8080/api/v1/admin/employees/create', {
+                method: 'POST',
+                body: postData,
+                headers: {
+                    'enctype': 'multipart/form-data'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create employee');
             }
+
+            alert('Employee created successfully!');
+            //window.location.href = '/admin/employees';
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while creating the employee.');
+            alert(error.message || 'An error occurred while creating the employee.');
+        } finally {
+            // Reset loading state
+            submitButton.disabled = false;
+            loadingSpinner.classList.add('hidden');
+            buttonText.textContent = 'Create Employee';
         }
     }
 </script>

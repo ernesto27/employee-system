@@ -3,6 +3,7 @@ package router
 import (
 	"database/sql"
 	"employees-system/controllers"
+	"employees-system/internal/s3"
 	"employees-system/models"
 	"employees-system/response"
 	"employees-system/session_service"
@@ -22,11 +23,15 @@ import (
 
 var sessionService = session_service.NewSession()
 
-func GetRouter(dbInstance *sql.DB) *chi.Mux {
+func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
 	const apiVersion = "/api/v1"
 
 	employeeController := controllers.Employee{
 		EmployeeService: models.EmployeeService{
+			DB: dbInstance,
+		},
+		S3Service: *myS3,
+		ImageService: models.ImageService{
 			DB: dbInstance,
 		},
 	}

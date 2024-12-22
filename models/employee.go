@@ -10,7 +10,6 @@ type Employee struct {
 	Name          string       `json:"name"`
 	Email         string       `json:"email"`
 	DateBirth     string       `json:"dateBirth"`
-	Image         string       `json:"images"`
 	StartWorkDate string       `json:"startWorkDate"`
 	EndWorkDate   string       `json:"endWorkDate"`
 	Active        bool         `json:"active"`
@@ -84,11 +83,11 @@ func (employeeService *EmployeeService) GetByID(id int) (Employee, error) {
 		SELECT 
 			id, name, email, 
 			date_birth, start_work_date, end_work_date,
-			created_at, updated_at, image
+			created_at, updated_at
 		FROM employees WHERE id = ?`, id).Scan(
 		&employee.ID, &employee.Name, &employee.Email,
 		&employee.DateBirth, &employee.StartWorkDate, &endWorkDate,
-		&employee.CreatedAt, &updatedAt, &employee.Image,
+		&employee.CreatedAt, &updatedAt,
 	)
 	if err != nil {
 		return employee, err
@@ -140,9 +139,9 @@ func (employeeService *EmployeeService) Create(employee Employee) (int, error) {
 	}
 
 	result, err := tx.Exec(`
-		INSERT INTO employees (name, email, date_birth, start_work_date, end_work_date, image)
-		VALUES (?, ?, ?, ?, ?, ?)`,
-		employee.Name, employee.Email, employee.DateBirth, employee.StartWorkDate, endWorkDate, employee.Image,
+		INSERT INTO employees (name, email, date_birth, start_work_date, end_work_date)
+		VALUES (?, ?, ?, ?, ?)`,
+		employee.Name, employee.Email, employee.DateBirth, employee.StartWorkDate, endWorkDate,
 	)
 	if err != nil {
 		tx.Rollback()
@@ -206,10 +205,10 @@ func (employeeService *EmployeeService) UpdateByID(employee Employee) error {
 
 	_, err = tx.Exec(`
 		UPDATE employees 
-		SET name = ?, email = ?, date_birth = ?, start_work_date = ?, end_work_date = ?, image = ?, active = ?
+		SET name = ?, email = ?, date_birth = ?, start_work_date = ?, end_work_date = ?, active = ?
 		WHERE id = ?`,
 		employee.Name, employee.Email, employee.DateBirth,
-		employee.StartWorkDate, endWorkDate, employee.Image, employee.Active,
+		employee.StartWorkDate, endWorkDate, employee.Active,
 		employee.ID,
 	)
 	if err != nil {
