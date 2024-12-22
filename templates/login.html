@@ -57,27 +57,51 @@
                 <div class="max-w-sm mx-auto w-full">
                     <h1 class="text-3xl text-slate-800 dark:text-slate-100 font-bold mb-6 text-center">¡Bienvenido! ✨</h1>
                     <!-- Form -->
-                    <form>
+                    <form method="POST" action="/admin/login">
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium mb-1" for="email">Correo Electrónico</label>
-                                <input id="email" class="form-input w-full" type="email" />
+                                <input id="email" name="email" class="form-input w-full" type="email" required />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-1" for="password">Contraseña</label>
-                                <input id="password" class="form-input w-full" type="password" autocomplete="on" />
+                                <input id="password" name="password" class="form-input w-full" type="password" autocomplete="on" required />
                             </div>
                         </div>
                         <div class="flex items-center justify-end mt-6">
-                            <a class="btn bg-indigo-500 hover:bg-indigo-600 text-white" href="index.html">Iniciar Sesión</a>
+                            <button type="submit" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">Iniciar Sesión</button>
                         </div>
                     </form>
-                    <!-- Footer -->
-                    <div class="pt-5 mt-6 border-t border-slate-200 dark:border-slate-700">
-                        <div class="text-sm">
-                            ¿No tienes una cuenta? <a class="font-medium text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400" href="signup.html">Regístrate</a>
-                        </div>
-                    </div>
+
+                    <script>
+                        document.querySelector('form').addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            
+                            const form = e.target;
+                            const formData = new FormData(form);
+                            const formEntries = Object.fromEntries(formData.entries());
+                            const jsonBody = JSON.stringify(formEntries);
+                            
+                            const postData = new FormData();
+                            postData.append('jsonBody', jsonBody);
+
+                            try {
+                                const response = await fetch('/admin/login', {
+                                    method: 'POST',
+                                    body: postData
+                                });
+                                
+                                if (response.ok) {
+                                   window.location.href = '/admin/dashboard';
+                                } else {
+                                    alert('Error en el inicio de sesión');
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                alert('Error en el inicio de sesión');
+                            }
+                        });
+                    </script>
                 </div>
             </div>
         </div>
