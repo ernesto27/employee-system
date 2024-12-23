@@ -39,3 +39,55 @@ func (imageService *ImageService) AssociateImageEmployee(imageID, employeeID int
 	}
 	return nil
 }
+
+func (ImageService *ImageService) GetImagesByEmployeeID(employeeID int) ([]Image, error) {
+	rows, err := ImageService.DB.Query(`
+		SELECT images.id, images.path, images.description, images.created_at
+		FROM images
+		INNER JOIN employees_images ON images.id = employees_images.image_id
+		WHERE employees_images.employee_id = ?`, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	images := []Image{}
+	for rows.Next() {
+		image := Image{}
+		err := rows.Scan(&image.ID, &image.Path, &image.Description, &image.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		images = append(images, image)
+	}
+	return images, nil
+}
+
+func (imageService *ImageService) DeleteByID(id int) error {
+	tx, err := imageService.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	imageService.SetTransaction(tx)
+
+	_, err = imageService.Transaction.Exec(`DELETE FROM images WHERE id = ?`, id)
+	if err != nil {
+		imageService.Transaction.Rollback()
+		return err
+	}
+
+	_, err = imageService.Transaction.Exec(`DELETE FROM employees_images WHERE image_id = ?`, id)
+	if err != nil {
+		imageService.Transaction.Rollback()
+		return err
+	}
+
+	err = imageService.Transaction.Commit()
+	if err != nil {
+		imageService.Transaction.Rollback()
+		return err
+	}
+
+	return nil
+}

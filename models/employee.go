@@ -18,6 +18,7 @@ type Employee struct {
 	Roles         []Role       `json:"roles"`
 	Technologies  []Technology `json:"technologies"`
 	Projects      []Project    `json:"projects"`
+	Images        []Image      `json:"images"`
 }
 
 type EmployeeService struct {

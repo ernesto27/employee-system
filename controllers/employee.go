@@ -6,6 +6,7 @@ import (
 	"employees-system/models"
 	"employees-system/response"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -82,6 +83,60 @@ func (employee *Employee) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = uploadImages(r, id, employee)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newEmployee)
+}
+
+func (employee *Employee) UpdateByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	if id == "" {
+		fmt.Println("id is required")
+		response.NewWithoutData().BadRequest(w)
+		return
+	}
+
+	idVal, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Println(err)
+		response.NewWithoutData().BadRequest(w)
+		return
+	}
+
+	var updatedEmployee models.Employee
+	jsonString := r.FormValue("jsonBody")
+	err = json.NewDecoder(strings.NewReader(jsonString)).Decode(&updatedEmployee)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Unable to decode JSON", http.StatusBadRequest)
+		return
+	}
+
+	updatedEmployee.ID = idVal
+
+	err = employee.EmployeeService.UpdateByID(updatedEmployee)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = uploadImages(r, idVal, employee)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedEmployee)
+}
+
+func uploadImages(r *http.Request, id int, employee *Employee) error {
 	imagesToSave := []models.Image{}
 	files := r.MultipartForm.File["files"]
 	var wg sync.WaitGroup
@@ -134,14 +189,12 @@ func (employee *Employee) Create(w http.ResponseWriter, r *http.Request) {
 	close(errChan)
 
 	if len(errChan) > 0 {
-		http.Error(w, (<-errChan).Error(), http.StatusInternalServerError)
-		return
+		return errors.New((<-errChan).Error())
 	}
 
 	tx, err := employee.ImageService.DB.Begin()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return errors.New(err.Error())
 	}
 
 	employee.ImageService.SetTransaction(tx)
@@ -150,27 +203,23 @@ func (employee *Employee) Create(w http.ResponseWriter, r *http.Request) {
 		imageID, err := employee.ImageService.Create(&image)
 		if err != nil {
 			tx.Rollback()
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return errors.New(err.Error())
 		}
 
 		err = employee.ImageService.AssociateImageEmployee(imageID, id)
 		if err != nil {
 			tx.Rollback()
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return errors.New(err.Error())
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return errors.New(err.Error())
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newEmployee)
+	return nil
 }
 
 func generateRandomString(n int) string {
@@ -180,41 +229,4 @@ func generateRandomString(n int) string {
 		result[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(result)
-}
-
-func (employee *Employee) UpdateByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-
-	if id == "" {
-		fmt.Println("id is required")
-		response.NewWithoutData().BadRequest(w)
-		return
-	}
-
-	idVal, err := strconv.Atoi(id)
-	if err != nil {
-		fmt.Println(err)
-		response.NewWithoutData().BadRequest(w)
-		return
-	}
-
-	var updatedEmployee models.Employee
-	jsonString := r.FormValue("jsonBody")
-	err = json.NewDecoder(strings.NewReader(jsonString)).Decode(&updatedEmployee)
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Unable to decode JSON", http.StatusBadRequest)
-		return
-	}
-
-	updatedEmployee.ID = idVal
-
-	err = employee.EmployeeService.UpdateByID(updatedEmployee)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedEmployee)
 }

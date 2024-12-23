@@ -246,6 +246,14 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
 				return
 			}
 
+			images, err := employeeController.ImageService.GetImagesByEmployeeID(id)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			employee.Images = images
+
 			data := utils.TemplateData{
 				Employee:     employee,
 				Roles:        roles,
@@ -291,6 +299,23 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
 			projectController.UpdateByID(w, r)
 		})
 
+		r.Get(apiVersion+"/admin/images", func(w http.ResponseWriter, r *http.Request) {
+			queryPath := r.URL.Query().Get("path")
+			if queryPath == "" {
+				http.Error(w, "Invalid path", http.StatusBadRequest)
+				return
+			}
+
+			b, err := myS3.Get(queryPath)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "image/jpeg")
+			w.Write(b)
+
+		})
 	})
 
 	return r
