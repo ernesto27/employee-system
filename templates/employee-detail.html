@@ -170,6 +170,15 @@
     </div>
 </div>
 <script>
+    let imagesToDelete = [];
+
+    function handleImageRemove(button) {
+        const imageId = button.getAttribute('data-image-id');
+        imagesToDelete.push(imageId);
+        button.closest('.relative').style.display = 'none';
+    }
+
+    // Modify edit button handler to reset imagesToDelete when canceling
     document.getElementById('edit-button').addEventListener('click', function() {
         const inputs = document.querySelectorAll('.form-input, .form-checkbox');
         const editButton = document.getElementById('edit-button');
@@ -189,6 +198,10 @@
             submitButton.classList.remove('hidden');
             fileUploadSection.classList.remove('hidden'); // Show file upload section
         } else {
+            imagesToDelete = [];
+            document.querySelectorAll('.relative').forEach(img => {
+                img.style.display = 'block';
+            });
             inputs.forEach(input => {
                 input.disabled = true;
             });
@@ -268,6 +281,11 @@
         const postData = new FormData();
         postData.append('jsonBody', jsonBody);
 
+        // Add imagesToDelete as separate key if any exist
+        if (imagesToDelete.length > 0) {
+            postData.append('imagesToDelete', imagesToDelete.join(','));
+        }
+
         // Add all files to FormData
         const fileInput = document.getElementById('fileInput');
         Array.from(fileInput.files).forEach(file => {
@@ -305,8 +323,9 @@
     // Add this new function after your existing script code
     function handleImageRemove(button) {
         const imageId = button.getAttribute('data-image-id');
-        alert(`Image ID: ${imageId}`);
-        // You can later expand this function to actually remove the image
+        imagesToDelete.push(imageId);
+        // Hide the image container
+        button.closest('.relative').style.display = 'none';
     }
 
     // Format date fields to YYYY-MM-DD on page load

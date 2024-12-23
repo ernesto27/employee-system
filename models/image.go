@@ -71,13 +71,13 @@ func (imageService *ImageService) DeleteByID(id int) error {
 
 	imageService.SetTransaction(tx)
 
-	_, err = imageService.Transaction.Exec(`DELETE FROM images WHERE id = ?`, id)
+	_, err = imageService.Transaction.Exec(`DELETE FROM employees_images WHERE image_id = ?`, id)
 	if err != nil {
 		imageService.Transaction.Rollback()
 		return err
 	}
 
-	_, err = imageService.Transaction.Exec(`DELETE FROM employees_images WHERE image_id = ?`, id)
+	_, err = imageService.Transaction.Exec(`DELETE FROM images WHERE id = ?`, id)
 	if err != nil {
 		imageService.Transaction.Rollback()
 		return err
