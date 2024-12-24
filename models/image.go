@@ -100,3 +100,26 @@ func (imageService *ImageService) AssociateImageProject(imageID, projectID int) 
 	}
 	return nil
 }
+
+func (imageService *ImageService) GetImagesByProjectID(projectID int) ([]Image, error) {
+	rows, err := imageService.DB.Query(`
+		SELECT images.id, images.path, images.description, images.created_at
+		FROM images
+		INNER JOIN projects_images ON images.id = projects_images.image_id
+		WHERE projects_images.project_id = ?`, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	images := []Image{}
+	for rows.Next() {
+		image := Image{}
+		err := rows.Scan(&image.ID, &image.Path, &image.Description, &image.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		images = append(images, image)
+	}
+	return images, nil
+}

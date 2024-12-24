@@ -86,6 +86,13 @@ func (project *Project) RenderDetailEdit(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	images, err := project.ImageService.GetImagesByProjectID(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	projectDetail.Images = images
+
 	templateData := utils.TemplateData{
 		URL:     utils.URL,
 		Project: projectDetail,
