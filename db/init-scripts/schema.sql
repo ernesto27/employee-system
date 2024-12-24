@@ -95,6 +95,16 @@ CREATE TABLE employees_images (
     FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 
+CREATE TABLE projects_images (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    image_id INT,
+    project_id INT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (image_id) REFERENCES images(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id)    
+);
+
+
 INSERT INTO employees (name, email, date_birth, start_work_date, end_work_date, active, created_at, updated_at) VALUES
 ('John Doe', 'john.doe@example.com', '1992-01-01', '2022-01-01', '2023-01-01', TRUE, NOW(), NOW()),
 ('Jane Smith', 'jane.smith@example.com', '1997-01-01', '2021-06-01', '2022-06-01', TRUE, NOW(), NOW());
@@ -191,4 +201,4 @@ INSERT INTO projects_technologies (project_id, technology_id) VALUES
 
 
 INSERT INTO admins (username, password, email) VALUES
-('admin', '$2a$10$wH8n5Z6Jz8G8hZ7Z8lKqOWmUqzBOvFZB6e3hN0Q7RD5P5Q5Z5Q5Q', 'admin@example.com');
+('admin', '$2a$10$l0zmxD/27jlh9zDJ7aXbCeZqQD4IhgXsIMzdWtDyb22rq9Bh7lElO', 'admin@example.com');

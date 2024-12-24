@@ -277,6 +277,10 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
 			ProjectService: models.ProjectService{
 				DB: dbInstance,
 			},
+			S3Service: *myS3,
+			ImageService: models.ImageService{
+				DB: dbInstance,
+			},
 		}
 
 		r.Get("/admin/projects", func(w http.ResponseWriter, r *http.Request) {

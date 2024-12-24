@@ -3,14 +3,15 @@ package models
 import "database/sql"
 
 type Project struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	StartDate   string `json:"start_date"`
-	EndDate     string `json:"end_date"`
-	Active      bool   `json:"active"`
-	Links       string `json:"links"`
-	Contacts    string `json:"contacts"`
+	ID          int     `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	StartDate   string  `json:"start_date"`
+	EndDate     string  `json:"end_date"`
+	Active      bool    `json:"active"`
+	Links       string  `json:"links"`
+	Contacts    string  `json:"contacts"`
+	Images      []Image `json:"images"`
 }
 
 type ProjectService struct {
@@ -105,7 +106,7 @@ func (projectService *ProjectService) GetByID(id int) (Project, error) {
 	return project, nil
 }
 
-func (projectService *ProjectService) Create(project Project) error {
+func (projectService *ProjectService) Create(project Project) (int, error) {
 	var endDate interface{}
 	if project.EndDate == "" {
 		endDate = nil
@@ -113,7 +114,7 @@ func (projectService *ProjectService) Create(project Project) error {
 		endDate = project.EndDate
 	}
 
-	_, err := projectService.DB.Exec(`
+	result, err := projectService.DB.Exec(`
 		INSERT INTO projects (name, description, start_date, end_date, active, links, contacts)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		project.Name, project.Description,
@@ -121,10 +122,15 @@ func (projectService *ProjectService) Create(project Project) error {
 		project.Links, project.Contacts,
 	)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
 }
 
 func (projectService *ProjectService) AssociateProjectEmployee(employeeID, projectID int) error {

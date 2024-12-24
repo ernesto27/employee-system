@@ -67,6 +67,9 @@
                     </div>
                 </div>
 
+                <!-- File Upload -->
+                {{template "upload-file" .}}
+
                 <!-- Status -->
                 <div>
                     <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Project Status</h2>
@@ -105,6 +108,14 @@
         const jsonBody = JSON.stringify(formEntries);
         const postData = new FormData();
         postData.append('jsonBody', jsonBody);
+
+        // Add files to FormData
+        const fileInput = form.querySelector('input[type="file"]');
+        if (fileInput && fileInput.files.length > 0) {
+            for (let i = 0; i < fileInput.files.length; i++) {
+                postData.append('files', fileInput.files[i]);
+            }
+        }
 
         try {
             const response = await fetch('http://localhost:8080/api/v1/admin/projects/create', {

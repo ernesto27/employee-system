@@ -91,3 +91,12 @@ func (imageService *ImageService) DeleteByID(id int) error {
 
 	return nil
 }
+
+func (imageService *ImageService) AssociateImageProject(imageID, projectID int) error {
+	_, err := imageService.Transaction.Exec(`
+		INSERT INTO projects_images (project_id, image_id) VALUES (?, ?)`, projectID, imageID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

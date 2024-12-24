@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"employees-system/internal/s3"
 	"employees-system/models"
 	"employees-system/utils"
 	"encoding/json"
@@ -15,6 +16,8 @@ import (
 
 type Project struct {
 	ProjectService models.ProjectService
+	S3Service      s3.MyS3
+	ImageService   models.ImageService
 }
 
 var tmplList = template.Must(template.ParseFiles("templates/layout-base.html", "templates/projects/project-list.html"))
@@ -51,7 +54,9 @@ func (project *Project) RenderList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var tmplCreate = template.Must(template.ParseFiles("templates/layout-base.html", "templates/projects/project-create.html"))
+var tmplCreate = template.Must(
+	template.ParseFiles("templates/layout-base.html", "templates/projects/project-create.html", "templates/components/upload-file.html"),
+)
 
 func (project *Project) RenderCreate(w http.ResponseWriter, r *http.Request) {
 	templateData := utils.TemplateData{
@@ -123,6 +128,11 @@ func (project *Project) UpdateByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (project *Project) Create(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
+		return
+	}
+
 	var newProject models.Project
 	jsonString := r.FormValue("jsonBody")
 	err := json.NewDecoder(strings.NewReader(jsonString)).Decode(&newProject)
@@ -132,13 +142,23 @@ func (project *Project) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = project.ProjectService.Create(newProject)
+	insertID, err := project.ProjectService.Create(newProject)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	uploader := &ImageUploader{
+		S3Service:    project.S3Service,
+		ImageService: project.ImageService,
+	}
+	err = uploader.UploadImages(r, insertID, "projects")
+	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newProject)
-
 }
