@@ -130,6 +130,33 @@ func (project *Project) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	uploader := &ImageUploader{
+		S3Service:    project.S3Service,
+		ImageService: project.ImageService,
+	}
+
+	err = uploader.UploadImages(r, id, "projects")
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	imagesIDsToDelete := strings.Split(r.FormValue("imagesToDelete"), ",")
+	for _, imageID := range imagesIDsToDelete {
+		imageIDVal, err := strconv.Atoi(imageID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = project.ImageService.DeleteByID(imageIDVal, "projects_images")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newProject)
 }
@@ -159,6 +186,7 @@ func (project *Project) Create(w http.ResponseWriter, r *http.Request) {
 		S3Service:    project.S3Service,
 		ImageService: project.ImageService,
 	}
+
 	err = uploader.UploadImages(r, insertID, "projects")
 	if err != nil {
 		fmt.Println(err)

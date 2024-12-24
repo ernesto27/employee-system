@@ -63,7 +63,7 @@ func (ImageService *ImageService) GetImagesByEmployeeID(employeeID int) ([]Image
 	return images, nil
 }
 
-func (imageService *ImageService) DeleteByID(id int) error {
+func (imageService *ImageService) DeleteByID(id int, table string) error {
 	tx, err := imageService.DB.Begin()
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (imageService *ImageService) DeleteByID(id int) error {
 
 	imageService.SetTransaction(tx)
 
-	_, err = imageService.Transaction.Exec(`DELETE FROM employees_images WHERE image_id = ?`, id)
+	_, err = imageService.Transaction.Exec(`DELETE FROM `+table+` WHERE image_id = ?`, id)
 	if err != nil {
 		imageService.Transaction.Rollback()
 		return err

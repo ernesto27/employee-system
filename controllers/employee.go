@@ -130,6 +130,7 @@ func (employee *Employee) UpdateByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	imagesIDsToDelete := strings.Split(r.FormValue("imagesToDelete"), ",")
 	for _, imageID := range imagesIDsToDelete {
 		imageIDVal, err := strconv.Atoi(imageID)
@@ -138,7 +139,7 @@ func (employee *Employee) UpdateByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = employee.ImageService.DeleteByID(imageIDVal)
+		err = employee.ImageService.DeleteByID(imageIDVal, "employees_images")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
