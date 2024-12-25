@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -43,7 +44,7 @@ func (project *Project) RenderList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := utils.TemplateData{
-		URL:      utils.URL,
+		URL:      os.Getenv("URL"),
 		Projects: projects,
 	}
 
@@ -60,7 +61,7 @@ var tmplCreate = template.Must(
 
 func (project *Project) RenderCreate(w http.ResponseWriter, r *http.Request) {
 	templateData := utils.TemplateData{
-		URL: utils.URL,
+		URL: os.Getenv("URL"),
 	}
 
 	err := tmplCreate.ExecuteTemplate(w, "layout-base", templateData)
@@ -94,7 +95,7 @@ func (project *Project) RenderDetailEdit(w http.ResponseWriter, r *http.Request)
 	projectDetail.Images = images
 
 	templateData := utils.TemplateData{
-		URL:     utils.URL,
+		URL:     os.Getenv("URL"),
 		Project: projectDetail,
 	}
 

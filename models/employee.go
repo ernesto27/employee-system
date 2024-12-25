@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 type Employee struct {
@@ -25,7 +26,7 @@ type EmployeeService struct {
 	DB *sql.DB
 }
 
-func (employeeService *EmployeeService) GetAll(page int) ([]Employee, error) {
+func (employeeService *EmployeeService) GetAll(page int, search string, timeRange string) ([]Employee, error) {
 	offset := 0
 	limit := 10
 
@@ -33,15 +34,40 @@ func (employeeService *EmployeeService) GetAll(page int) ([]Employee, error) {
 		offset = (page - 1) * limit
 	}
 
-	var employees []Employee
-	rows, err := employeeService.DB.Query(`
+	query := `
 		SELECT 
 			id, name, email, 
 			date_birth, start_work_date, end_work_date,
 			created_at, updated_at 
-		FROM employees
-		ORDER BY id DESC
-		LIMIT ? OFFSET ?`, limit, offset)
+		FROM employees`
+
+	var args []interface{}
+	var conditions []string
+
+	if search != "" {
+		searchTerm := "%" + search + "%"
+		conditions = append(conditions, "(name LIKE ? OR email LIKE ?)")
+		args = append(args, searchTerm, searchTerm)
+	}
+
+	if timeRange != "" && timeRange != "allTime" {
+		switch timeRange {
+		case "lastMonth":
+			conditions = append(conditions, "start_work_date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)")
+		case "lastYear":
+			conditions = append(conditions, "start_work_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)")
+		}
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	query += ` ORDER BY id DESC LIMIT ? OFFSET ?`
+	args = append(args, limit, offset)
+
+	var employees []Employee
+	rows, err := employeeService.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

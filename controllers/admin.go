@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -24,7 +25,7 @@ func (admin *Admin) RenderLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := utils.TemplateData{
-		URL: utils.URL,
+		URL: os.Getenv("URL"),
 	}
 	err = tmpl.Execute(w, data)
 	if err != nil {
@@ -71,5 +72,5 @@ func (admin *Admin) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("logout success"))
+	http.Redirect(w, r, "/admin/login", http.StatusOK)
 }

@@ -141,7 +141,10 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 				return
 			}
 
-			employees, err := employeeController.EmployeeService.GetAll(page)
+			searchQuery := r.URL.Query().Get("search")
+			timeRange := r.URL.Query().Get("timeRange")
+
+			employees, err := employeeController.EmployeeService.GetAll(page, searchQuery, timeRange)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

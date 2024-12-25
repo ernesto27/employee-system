@@ -11,5 +11,3 @@ type TemplateData struct {
 	Project      models.Project
 	URL          string
 }
-
-const URL = "http://localhost:8080/admin/public"

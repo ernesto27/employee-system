@@ -27,7 +27,7 @@ type Employee struct {
 }
 
 func (employee *Employee) GetAll(w http.ResponseWriter, r *http.Request) {
-	employees, err := employee.EmployeeService.GetAll(1)
+	employees, err := employee.EmployeeService.GetAll(1, "", "")
 	if err != nil {
 		fmt.Println(err)
 		response.NewWithoutData().InternalServerError(w)
