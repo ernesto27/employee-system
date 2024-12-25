@@ -1,20 +1,13 @@
 {{define "content"}}
 <style>
-    .spinner {
-        border: 3px solid rgba(0, 0, 0, 0.1);
-        border-radius: 50%;
-        border-top: 3px solid #4f46e5;
-        width: 24px;
-        height: 24px;
-        animation: spin 1s linear infinite;
-    }
 
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
 </style>
 
+<head>
+    <!-- ...existing code... -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+</head>
 
 <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
     <!-- Page header -->
@@ -82,17 +75,16 @@
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Projects:</label>
-                    <div class="grid grid-cols-3 gap-4">
-                        {{range .Projects}}
-                        <label class="flex items-center mb-2">
-                            {{$projectID := .ID}}
-                            <input type="checkbox" name="projects" value="{{$projectID}}" {{if hasProject $projectID $.Employee.Projects}}checked{{end}} disabled class="form-checkbox mr-2"> 
-                            <span class="text-sm ml-2">{{.Name}} - {{.Description}}</span>
-                        </label>
-                        {{end}}
-                    </div>
-                </div>
+    <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Projects:</label>
+    <select id="project-select" multiple placeholder="Select projects..." class="form-select w-full">
+        {{range .Projects}}
+            {{$projectID := .ID}}
+            <option value="{{$projectID}}" {{if hasProject $projectID $.Employee.Projects}}selected{{end}}>
+                {{.Name}} - {{.Description}}
+            </option>
+        {{end}}
+    </select>
+</div>
 
                 <!-- Current Images Section -->
                 <div class="mb-8">
@@ -171,6 +163,48 @@
 </div>
 <script>
     let imagesToDelete = [];
+    let projectSelect;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize TomSelect with existing data
+        projectSelect = new TomSelect('#project-select', {
+            plugins: ['remove_button', 'clear_button'],
+            maxItems: null,
+            valueField: 'value',
+            labelField: 'text',
+            searchField: ['text'],
+            create: false,
+            render: {
+                option: function(data, escape) {
+                    const [name, description] = data.text.split(' - ');
+                    return `<div class="flex flex-col p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900">
+                        <span class="font-medium">${escape(name)}</span>
+                        ${description ? `<span class="text-sm text-slate-500 dark:text-slate-400">${escape(description)}</span>` : ''}
+                    </div>`;
+                },
+                item: function(data, escape) {
+                    const name = data.text.split(' - ')[0];
+                    return `<div class="flex items-center bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded">
+                        <span class="text-sm text-indigo-700 dark:text-indigo-200">${escape(name)}</span>
+                    </div>`;
+                }
+            }
+        });
+        
+        // Initially disable it
+        projectSelect.disable();
+
+        // Format date fields
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            if (input.value) {
+                const date = new Date(input.value);
+                if (!isNaN(date)) {
+                    input.value = date.toISOString().split('T')[0];
+                }
+            }
+        });
+    });
 
     function handleImageRemove(button) {
         const imageId = button.getAttribute('data-image-id');
@@ -178,7 +212,7 @@
         button.closest('.relative').style.display = 'none';
     }
 
-    // Modify edit button handler to reset imagesToDelete when canceling
+    // Edit button handler with TomSelect support
     document.getElementById('edit-button').addEventListener('click', function() {
         const inputs = document.querySelectorAll('.form-input, .form-checkbox');
         const editButton = document.getElementById('edit-button');
@@ -192,34 +226,32 @@
                     input.disabled = false;
                 }
             });
-            // Show remove buttons
             removeButtons.forEach(btn => btn.classList.remove('hidden'));
+            projectSelect.enable();
             editButton.textContent = 'Cancel';
             submitButton.classList.remove('hidden');
-            fileUploadSection.classList.remove('hidden'); // Show file upload section
+            fileUploadSection.classList.remove('hidden');
         } else {
+            inputs.forEach(input => input.disabled = true);
+            removeButtons.forEach(btn => btn.classList.add('hidden'));
+            projectSelect.disable();
+            editButton.textContent = 'Edit';
+            submitButton.classList.add('hidden');
+            fileUploadSection.classList.add('hidden');
             imagesToDelete = [];
             document.querySelectorAll('.relative').forEach(img => {
                 img.style.display = 'block';
             });
-            inputs.forEach(input => {
-                input.disabled = true;
-            });
-            // Hide remove buttons
-            removeButtons.forEach(btn => btn.classList.add('hidden'));
-            editButton.textContent = 'Edit';
-            submitButton.classList.add('hidden');
-            fileUploadSection.classList.add('hidden'); // Hide file upload section
         }
     });
 
+    // Submit handler with TomSelect support
     async function handleSubmit(event) {
         event.preventDefault();
 
         const submitButton = document.getElementById('submit-button');
         const loadingSpinner = document.getElementById('loading-spinner');
 
-        // Show loading state
         submitButton.disabled = true;
         submitButton.classList.add('opacity-50', 'cursor-not-allowed');
         loadingSpinner.classList.remove('hidden');
@@ -231,39 +263,27 @@
         // Convert 'active' to boolean
         formEntries.active = formEntries.active === 'on';
 
-        // Set 'image' to empty string if not provided
-        if (!formEntries.image) {
-            formEntries.image = '';
-        }
-
-        // Convert roles to the specified format
+        // Handle roles
         const roles = [];
         form.querySelectorAll('input[name="roles"]:checked').forEach(roleCheckbox => {
-            roles.push({
-                id: parseInt(roleCheckbox.value, 10),
-            });
+            roles.push({ id: parseInt(roleCheckbox.value, 10) });
         });
         formEntries.roles = roles;
 
-        // Convert technologies to the specified format
+        // Handle technologies
         const technologies = [];
         form.querySelectorAll('input[name="technologies"]:checked').forEach(techCheckbox => {
-            technologies.push({
-                id: parseInt(techCheckbox.value, 10),
-            });
+            technologies.push({ id: parseInt(techCheckbox.value, 10) });
         });
         formEntries.technologies = technologies;
 
-        // Convert projects to the specified format
-        const projects = [];
-        form.querySelectorAll('input[name="projects"]:checked').forEach(projectCheckbox => {
-            projects.push({
-                id: parseInt(projectCheckbox.value, 10),
-            });
-        });
+        // Handle projects using TomSelect
+        const projects = projectSelect.getValue().map(value => ({
+            id: parseInt(value, 10)
+        }));
         formEntries.projects = projects;
 
-        // Format date fields to YYYY-MM-DD if they are valid
+        // Handle dates
         if (formEntries.startWorkDate) {
             const startWorkDate = new Date(formEntries.startWorkDate);
             if (!isNaN(startWorkDate)) {
@@ -281,12 +301,10 @@
         const postData = new FormData();
         postData.append('jsonBody', jsonBody);
 
-        // Add imagesToDelete as separate key if any exist
         if (imagesToDelete.length > 0) {
             postData.append('imagesToDelete', imagesToDelete.join(','));
         }
 
-        // Add all files to FormData
         const fileInput = document.getElementById('fileInput');
         Array.from(fileInput.files).forEach(file => {
             postData.append('files', file);
@@ -304,8 +322,7 @@
 
             if (response.ok) {
                 alert('Employee updated successfully!');
-                form.reset();
-                window.location.reload(); // Reload the page after success
+                window.location.reload();
             } else {
                 alert('Failed to update employee.');
             }
@@ -313,33 +330,11 @@
             console.error('Error:', error);
             alert('An error occurred while updating the employee.');
         } finally {
-            // Reset loading state
             submitButton.disabled = false;
             submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
             loadingSpinner.classList.add('hidden');
         }
     }
-
-    // Add this new function after your existing script code
-    function handleImageRemove(button) {
-        const imageId = button.getAttribute('data-image-id');
-        imagesToDelete.push(imageId);
-        // Hide the image container
-        button.closest('.relative').style.display = 'none';
-    }
-
-    // Format date fields to YYYY-MM-DD on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        const dateInputs = document.querySelectorAll('input[type="date"]');
-        dateInputs.forEach(input => {
-            if (input.value) {
-                const date = new Date(input.value);
-                if (!isNaN(date)) {
-                    input.value = date.toISOString().split('T')[0];
-                }
-            }
-        });
-    });
 </script>
 
 {{end}}

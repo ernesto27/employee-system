@@ -232,7 +232,7 @@ func (employeeService *EmployeeService) UpdateByID(employee Employee) error {
 
 	_, err = tx.Exec(`
 		UPDATE employees 
-		SET name = ?, email = ?, date_birth = ?, start_work_date = ?, end_work_date = ?, active = ?
+		SET name = ?, email = ?, date_birth = ?, start_work_date = ?, end_work_date = ?, active = ?, updated_at = NOW()
 		WHERE id = ?`,
 		employee.Name, employee.Email, employee.DateBirth,
 		employee.StartWorkDate, endWorkDate, employee.Active,

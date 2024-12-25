@@ -121,28 +121,34 @@ func (employee *Employee) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	updatedEmployee.ID = idVal
 	err = employee.EmployeeService.UpdateByID(updatedEmployee)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = uploadImages(r, idVal, employee)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	imagesIDsToDelete := strings.Split(r.FormValue("imagesToDelete"), ",")
-	for _, imageID := range imagesIDsToDelete {
-		imageIDVal, err := strconv.Atoi(imageID)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	if r.FormValue("imagesToDelete") != "" {
+		imagesIDsToDelete := strings.Split(r.FormValue("imagesToDelete"), ",")
+		for _, imageID := range imagesIDsToDelete {
+			imageIDVal, err := strconv.Atoi(imageID)
+			if err != nil {
+				fmt.Println(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 
-		err = employee.ImageService.DeleteByID(imageIDVal, "employees_images")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			err = employee.ImageService.DeleteByID(imageIDVal, "employees_images")
+			if err != nil {
+				fmt.Println(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 

@@ -1,4 +1,9 @@
 {{define "content"}}
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+
 <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
     <!-- Page header -->
     <div class="mb-8">
@@ -115,14 +120,11 @@
                             <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
                                 Projects
                             </label>
-                            <div class="grid grid-cols-3 gap-4">
+                            <select id="project-select" multiple placeholder="Select projects..." class="form-select w-full">
                                 {{range .Projects}}
-                                <label class="flex items-center mb-2">
-                                    <input type="checkbox" name="projects" value="{{.ID}}" class="form-checkbox" />
-                                    <span class="text-sm ml-2">{{.Name}}</span>
-                                </label>
+                                    <option value="{{.ID}}">{{.Name}} - {{.Description}}</option>
                                 {{end}}
-                            </div>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -142,9 +144,40 @@
         </div>
     </div>
 </div>
+
+
+
 <script>
-   
-    // Modify handleSubmit function
+    let projectSelect;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize TomSelect
+        projectSelect = new TomSelect('#project-select', {
+            plugins: ['remove_button', 'clear_button'],
+            maxItems: null,
+            valueField: 'value',
+            labelField: 'text',
+            searchField: ['text'],
+            create: false,
+            render: {
+                option: function(data, escape) {
+                    const [name, description] = data.text.split(' - ');
+                    return `<div class="flex flex-col p-2 hover:bg-indigo-50 dark:hover:bg-indigo-900">
+                        <span class="font-medium">${escape(name)}</span>
+                        ${description ? `<span class="text-sm text-slate-500 dark:text-slate-400">${escape(description)}</span>` : ''}
+                    </div>`;
+                },
+                item: function(data, escape) {
+                    const name = data.text.split(' - ')[0];
+                    return `<div class="flex items-center bg-indigo-50 dark:bg-indigo-900 px-2 py-1 rounded">
+                        <span class="text-sm text-indigo-700 dark:text-indigo-200">${escape(name)}</span>
+                    </div>`;
+                }
+            }
+        });
+    });
+
+    // Update handleSubmit function to use TomSelect
     async function handleSubmit(event) {
         event.preventDefault();
 
@@ -185,13 +218,9 @@
             formEntries.technologies = technologies;
 
             // Add projects
-            const projects = [];
-            form.querySelectorAll('input[name="projects"]:checked').forEach(projectCheckbox => {
-                projects.push({
-                    id: parseInt(projectCheckbox.value, 10),
-                    name: projectCheckbox.nextElementSibling.textContent.trim()
-                });
-            });
+            const projects = projectSelect.getValue().map(value => ({
+                id: parseInt(value, 10)
+            }));
             formEntries.projects = projects;
 
             const jsonBody = JSON.stringify(formEntries);

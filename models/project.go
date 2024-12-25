@@ -144,6 +144,8 @@ func (projectService *ProjectService) AssociateProjectEmployee(employeeID, proje
 
 func (projectService *ProjectService) GetByEmployeeID(employeeID int) ([]Project, error) {
 	var projects []Project
+	var endDate sql.NullString
+
 	rows, err := projectService.DB.Query(`
 		SELECT projects.id, projects.name, projects.description, projects.start_date, projects.end_date
 		FROM projects
@@ -159,10 +161,14 @@ func (projectService *ProjectService) GetByEmployeeID(employeeID int) ([]Project
 		var project Project
 
 		err := rows.Scan(
-			&project.ID, &project.Name, &project.Description, &project.StartDate, &project.EndDate,
+			&project.ID, &project.Name, &project.Description, &project.StartDate, &endDate,
 		)
 		if err != nil {
 			return nil, err
+		}
+
+		if endDate.Valid {
+			project.EndDate = endDate.String
 		}
 
 		projects = append(projects, project)
