@@ -23,7 +23,7 @@ import (
 
 var sessionService = session_service.NewSession()
 
-func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
+func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 	const apiVersion = "/api/v1"
 
 	employeeController := controllers.Employee{
@@ -149,7 +149,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
 
 			data := utils.TemplateData{
 				Employees: employees,
-				URL:       utils.URL,
+				URL:       url,
 			}
 
 			err = tmpl.ExecuteTemplate(w, "layout-base", data)
@@ -192,7 +192,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
 			}
 
 			data := utils.TemplateData{
-				URL:          utils.URL,
+				URL:          url,
 				Roles:        roles,
 				Technologies: technologies,
 				Projects:     projectService,
@@ -259,7 +259,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3) *chi.Mux {
 				Roles:        roles,
 				Technologies: technologies,
 				Projects:     projects,
-				URL:          utils.URL,
+				URL:          url,
 			}
 
 			err = tmpl.ExecuteTemplate(w, "layout-base", data)

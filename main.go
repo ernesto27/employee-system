@@ -40,7 +40,9 @@ func main() {
 	awsSecret := os.Getenv("AWS_SECRET")
 	myS3 := s3.NewS3(awsRegion, awsAccesKey, awsSecret, awsS3Bucket)
 
-	r := router.GetRouter(dbInstance.Db, myS3)
+	url := os.Getenv("URL")
+
+	r := router.GetRouter(dbInstance.Db, myS3, url)
 
 	srv := &http.Server{
 		Addr:    ":8080",
