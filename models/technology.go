@@ -12,11 +12,27 @@ type TechnologyService struct {
 	Transaction *sql.Tx
 }
 
-func (technologyService *TechnologyService) GetAll() ([]Technology, error) {
+func (technologyService *TechnologyService) GetAll(page int, name string) ([]Technology, error) {
+	query := "SELECT id, name FROM technologies"
+	var args []interface{}
+
+	if name != "" {
+		query += " WHERE name LIKE ?"
+		args = append(args, "%"+name+"%")
+	}
+
+	if page != -1 {
+		offset := 0
+		limit := 10
+		if page > 1 {
+			offset = (page - 1) * limit
+		}
+		query += " LIMIT ? OFFSET ?"
+		args = append(args, limit, offset)
+	}
+
 	var technologies []Technology
-	rows, err := technologyService.DB.Query(`
-		SELECT id, name FROM technologies
-	`)
+	rows, err := technologyService.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

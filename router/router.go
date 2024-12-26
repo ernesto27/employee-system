@@ -48,6 +48,12 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 		DB: dbInstance,
 	}
 
+	technologyController := controllers.Technology{
+		TechnologyService: models.TechnologyService{
+			DB: dbInstance,
+		},
+	}
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -182,7 +188,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 				return
 			}
 
-			technologies, err := technologyService.GetAll()
+			technologies, err := technologyService.GetAll(-1, "")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -237,7 +243,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 				return
 			}
 
-			technologies, err := technologyService.GetAll()
+			technologies, err := technologyService.GetAll(-1, "")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -322,6 +328,10 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 			w.Header().Set("Content-Type", "image/jpeg")
 			w.Write(b)
 
+		})
+
+		r.Get("/admin/technologies", func(w http.ResponseWriter, r *http.Request) {
+			technologyController.RenderList(w, r)
 		})
 	})
 
