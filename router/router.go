@@ -330,8 +330,17 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 
 		})
 
+		// Technology routes
 		r.Get("/admin/technologies", func(w http.ResponseWriter, r *http.Request) {
 			technologyController.RenderList(w, r)
+		})
+
+		r.Get("/admin/technologies/create", func(w http.ResponseWriter, r *http.Request) {
+			technologyController.RenderCreate(w, r)
+		})
+
+		r.Post(apiVersion+"/admin/technologies", func(w http.ResponseWriter, r *http.Request) {
+			technologyController.Create(w, r)
 		})
 	})
 

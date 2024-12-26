@@ -27,7 +27,7 @@ func (technologyService *TechnologyService) GetAll(page int, name string) ([]Tec
 		if page > 1 {
 			offset = (page - 1) * limit
 		}
-		query += " LIMIT ? OFFSET ?"
+		query += " ORDER BY id DESC LIMIT ? OFFSET ?"
 		args = append(args, limit, offset)
 	}
 
@@ -104,4 +104,20 @@ func (technologyService *TechnologyService) RemoveByEmployeeID(employeeID int) e
 	}
 
 	return nil
+}
+
+func (technologyService *TechnologyService) Create(technology Technology) (int, error) {
+	result, err := technologyService.DB.Exec(`
+		INSERT INTO technologies (name) VALUES (?)
+	`, technology.Name)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
 }
