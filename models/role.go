@@ -12,11 +12,27 @@ type RoleService struct {
 	Transaction *sql.Tx
 }
 
-func (roleService *RoleService) GetAll() ([]Role, error) {
+func (roleService *RoleService) GetAll(page int, name string) ([]Role, error) {
+	query := "SELECT id, name FROM roles"
+	var args []interface{}
+
+	if name != "" {
+		query += " WHERE name LIKE ?"
+		args = append(args, "%"+name+"%")
+	}
+
+	if page != -1 {
+		offset := 0
+		limit := 10
+		if page > 1 {
+			offset = (page - 1) * limit
+		}
+		query += " ORDER BY id DESC LIMIT ? OFFSET ?"
+		args = append(args, limit, offset)
+	}
+
 	var roles []Role
-	rows, err := roleService.DB.Query(`
-		SELECT id, name FROM roles
-	`)
+	rows, err := roleService.DB.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -24,14 +40,12 @@ func (roleService *RoleService) GetAll() ([]Role, error) {
 
 	for rows.Next() {
 		var role Role
-
 		err := rows.Scan(
 			&role.ID, &role.Name,
 		)
 		if err != nil {
 			return nil, err
 		}
-
 		roles = append(roles, role)
 	}
 

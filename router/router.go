@@ -182,7 +182,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 				return
 			}
 
-			roles, err := roleService.GetAll()
+			roles, err := roleService.GetAll(-1, "")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -237,7 +237,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 				return
 			}
 
-			roles, err := roleService.GetAll()
+			roles, err := roleService.GetAll(-1, "")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -349,6 +349,17 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 
 		r.Put(apiVersion+"/admin/technologies/{id}", func(w http.ResponseWriter, r *http.Request) {
 			technologyController.UpdateByID(w, r)
+		})
+
+		// Roles routes
+		roleController := controllers.Role{
+			RoleService: models.RoleService{
+				DB: dbInstance,
+			},
+		}
+
+		r.Get("/admin/roles", func(w http.ResponseWriter, r *http.Request) {
+			roleController.RenderList(w, r)
 		})
 	})
 
