@@ -3,8 +3,9 @@ package models
 import "database/sql"
 
 type Technology struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type TechnologyService struct {
@@ -120,4 +121,31 @@ func (technologyService *TechnologyService) Create(technology Technology) (int, 
 	}
 
 	return int(id), nil
+}
+
+func (technologyService *TechnologyService) UpdateByID(id int, technology Technology) error {
+	_, err := technologyService.DB.Exec(`
+		UPDATE technologies 
+		SET name = ?, description = ?
+		WHERE id = ?
+	`, technology.Name, technology.Description, id)
+
+	return err
+}
+
+func (technologyService *TechnologyService) GetByID(id int) (Technology, error) {
+	var technology Technology
+	var description sql.NullString
+
+	err := technologyService.DB.QueryRow(`
+		SELECT id, name, description
+		FROM technologies 
+		WHERE id = ?
+	`, id).Scan(&technology.ID, &technology.Name, &description)
+
+	if description.Valid {
+		technology.Description = description.String
+	}
+
+	return technology, err
 }

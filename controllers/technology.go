@@ -10,6 +10,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi"
 )
 
 type Technology struct {
@@ -84,4 +86,57 @@ func (technology *Technology) Create(w http.ResponseWriter, r *http.Request) {
 	newTechnology.ID = insertID
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newTechnology)
+}
+
+var tmplTechnologyDetailEdit = template.Must(template.ParseFiles("templates/layout-base.html", "templates/technologies/technology-detail-edit.html"))
+
+func (technology *Technology) RenderDetailEdit(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid technology ID", http.StatusBadRequest)
+		return
+	}
+
+	tech, err := technology.TechnologyService.GetByID(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	templateData := utils.TemplateData{
+		URL:        os.Getenv("URL"),
+		Technology: tech,
+	}
+
+	err = tmplTechnologyDetailEdit.ExecuteTemplate(w, "layout-base", templateData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (technology *Technology) UpdateByID(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid technology ID", http.StatusBadRequest)
+		return
+	}
+
+	var updatedTechnology models.Technology
+	jsonString := r.FormValue("jsonBody")
+	err = json.NewDecoder(strings.NewReader(jsonString)).Decode(&updatedTechnology)
+	if err != nil {
+		http.Error(w, "Unable to decode JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = technology.TechnologyService.UpdateByID(id, updatedTechnology)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedTechnology)
 }

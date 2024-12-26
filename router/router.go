@@ -342,6 +342,14 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 		r.Post(apiVersion+"/admin/technologies", func(w http.ResponseWriter, r *http.Request) {
 			technologyController.Create(w, r)
 		})
+
+		r.Get("/admin/technologies/{id}", func(w http.ResponseWriter, r *http.Request) {
+			technologyController.RenderDetailEdit(w, r)
+		})
+
+		r.Put(apiVersion+"/admin/technologies/{id}", func(w http.ResponseWriter, r *http.Request) {
+			technologyController.UpdateByID(w, r)
+		})
 	})
 
 	return r
