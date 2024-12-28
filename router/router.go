@@ -361,6 +361,22 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 		r.Get("/admin/roles", func(w http.ResponseWriter, r *http.Request) {
 			roleController.RenderList(w, r)
 		})
+
+		r.Get("/admin/roles/create", func(w http.ResponseWriter, r *http.Request) {
+			roleController.RenderCreate(w, r)
+		})
+
+		r.Post(apiVersion+"/admin/roles", func(w http.ResponseWriter, r *http.Request) {
+			roleController.Create(w, r)
+		})
+
+		r.Get("/admin/roles/{id}", func(w http.ResponseWriter, r *http.Request) {
+			roleController.RenderDetailEdit(w, r)
+		})
+
+		r.Put(apiVersion+"/admin/roles/{id}", func(w http.ResponseWriter, r *http.Request) {
+			roleController.UpdateByID(w, r)
+		})
 	})
 
 	return r

@@ -12,7 +12,10 @@ CREATE TABLE employees (
 
 CREATE TABLE roles (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255)
+    name VARCHAR(255),
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE employees_roles (
@@ -49,7 +52,9 @@ CREATE TABLE employees_projects (
 CREATE TABLE technologies (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255),
-    description TEXT
+    description TEXT,   
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE projects_technologies (

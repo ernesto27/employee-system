@@ -11,4 +11,5 @@ type TemplateData struct {
 	Project      models.Project
 	URL          string
 	Technology   models.Technology
+	Role         models.Role
 }

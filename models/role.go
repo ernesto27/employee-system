@@ -3,8 +3,9 @@ package models
 import "database/sql"
 
 type Role struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type RoleService struct {
@@ -96,6 +97,48 @@ func (roleService *RoleService) RemoveByEmployeeID(employeeID int) error {
 	_, err := roleService.Transaction.Exec(`
 		DELETE FROM employees_roles WHERE employee_id = ?
 	`, employeeID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (roleService *RoleService) GetByID(id int) (Role, error) {
+	var role Role
+	var description sql.NullString
+	err := roleService.DB.QueryRow("SELECT id, name, description FROM roles WHERE id = ?", id).
+		Scan(&role.ID, &role.Name, &description)
+	if err != nil {
+		return role, err
+	}
+
+	if description.Valid {
+		role.Description = description.String
+	}
+	return role, nil
+}
+
+func (roleService *RoleService) Create(role Role) (int, error) {
+	res, err := roleService.DB.Exec("INSERT INTO roles (name, description) VALUES (?, ?)", role.Name, role.Description)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
+}
+
+func (roleService *RoleService) UpdateByID(id int, role Role) error {
+	_, err := roleService.DB.Exec(`
+		UPDATE roles 
+		SET name = ?, description = ?
+		WHERE id = ?
+	`, role.Name, role.Description, id)
 	if err != nil {
 		return err
 	}
