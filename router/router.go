@@ -7,13 +7,9 @@ import (
 	"employees-system/models"
 	"employees-system/response"
 	"employees-system/session_service"
-	"employees-system/utils"
-	"fmt"
-	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -26,16 +22,6 @@ var sessionService = session_service.NewSession()
 func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 	const apiVersion = "/api/v1"
 
-	employeeController := controllers.Employee{
-		EmployeeService: models.EmployeeService{
-			DB: dbInstance,
-		},
-		S3Service: *myS3,
-		ImageService: models.ImageService{
-			DB: dbInstance,
-		},
-	}
-
 	roleService := models.RoleService{
 		DB: dbInstance,
 	}
@@ -46,6 +32,19 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 
 	projectService := models.ProjectService{
 		DB: dbInstance,
+	}
+
+	employeeController := controllers.Employee{
+		EmployeeService: models.EmployeeService{
+			DB: dbInstance,
+		},
+		RoleService:       roleService,
+		TechnologyService: technologyService,
+		ProjectService:    projectService,
+		S3Service:         *myS3,
+		ImageService: models.ImageService{
+			DB: dbInstance,
+		},
 	}
 
 	technologyController := controllers.Technology{
@@ -74,33 +73,6 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 	r.Get(apiVersion+"/", func(w http.ResponseWriter, r *http.Request) {
 		response.NewWithoutData().WithMessage("employees system api v1").Success(w)
 	})
-
-	funcMap := template.FuncMap{
-		"hasRole": func(roleID int, employeeRoles []models.Role) bool {
-			for _, r := range employeeRoles {
-				if r.ID == roleID {
-					return true
-				}
-			}
-			return false
-		},
-		"hasTechnology": func(techID int, employeeTechs []models.Technology) bool {
-			for _, t := range employeeTechs {
-				if t.ID == techID {
-					return true
-				}
-			}
-			return false
-		},
-		"hasProject": func(projectID int, employeeProjects []models.Project) bool {
-			for _, p := range employeeProjects {
-				if p.ID == projectID {
-					return true
-				}
-			}
-			return false
-		},
-	}
 
 	// Admin routes
 	adminController := controllers.Admin{
@@ -131,40 +103,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 		r.Use(AuthMiddleware)
 
 		r.Get("/admin/employees", func(w http.ResponseWriter, r *http.Request) {
-			tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-list.html")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			pageStr := r.URL.Query().Get("page")
-			if pageStr == "" {
-				pageStr = "1"
-			}
-			page, err := strconv.Atoi(pageStr)
-			if err != nil {
-				http.Error(w, "Invalid page number", http.StatusBadRequest)
-				return
-			}
-
-			searchQuery := r.URL.Query().Get("search")
-			timeRange := r.URL.Query().Get("timeRange")
-
-			employees, err := employeeController.EmployeeService.GetAll(page, searchQuery, timeRange)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			data := utils.TemplateData{
-				Employees: employees,
-				URL:       url,
-			}
-
-			err = tmpl.ExecuteTemplate(w, "layout-base", data)
-			if err != nil {
-				fmt.Println(err)
-			}
+			employeeController.RenderList(w, r)
 		})
 
 		r.Get(apiVersion+"/employees", func(w http.ResponseWriter, r *http.Request) {
@@ -176,41 +115,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 		})
 
 		r.Get("/admin/employees/create", func(w http.ResponseWriter, r *http.Request) {
-			tmpl, err := template.ParseFiles("templates/layout-base.html", "templates/employee-create.html")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			roles, err := roleService.GetAll(-1, "")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			technologies, err := technologyService.GetAll(-1, "")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			projectService, err := projectService.GetAll(-1, "")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			data := utils.TemplateData{
-				URL:          url,
-				Roles:        roles,
-				Technologies: technologies,
-				Projects:     projectService,
-			}
-
-			err = tmpl.ExecuteTemplate(w, "layout-base", data)
-			if err != nil {
-				fmt.Println(err)
-			}
+			employeeController.RenderCreate(w, r)
 		})
 
 		r.Post(apiVersion+"/admin/employees/create", func(w http.ResponseWriter, r *http.Request) {
@@ -218,63 +123,7 @@ func GetRouter(dbInstance *sql.DB, myS3 *s3.MyS3, url string) *chi.Mux {
 		})
 
 		r.Get("/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
-			tmpl, err := template.New("layout-base").Funcs(funcMap).ParseFiles("templates/layout-base.html", "templates/employee-detail.html")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			idStr := chi.URLParam(r, "id")
-			id, err := strconv.Atoi(idStr)
-			if err != nil {
-				http.Error(w, "Invalid employee ID", http.StatusBadRequest)
-				return
-			}
-
-			employee, err := employeeController.EmployeeService.GetByID(id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			roles, err := roleService.GetAll(-1, "")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			technologies, err := technologyService.GetAll(-1, "")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			projects, err := projectService.GetAll(-1, "")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			images, err := employeeController.ImageService.GetImagesByEmployeeID(id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			employee.Images = images
-
-			data := utils.TemplateData{
-				Employee:     employee,
-				Roles:        roles,
-				Technologies: technologies,
-				Projects:     projects,
-				URL:          url,
-			}
-
-			err = tmpl.ExecuteTemplate(w, "layout-base", data)
-			if err != nil {
-				fmt.Println(err)
-			}
+			employeeController.RenderDetailEdit(w, r)
 		})
 
 		r.Put(apiVersion+"/admin/employees/{id}", func(w http.ResponseWriter, r *http.Request) {
