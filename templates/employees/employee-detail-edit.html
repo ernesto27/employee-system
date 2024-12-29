@@ -1,16 +1,37 @@
 {{define "content"}}
-<style>
 
-</style>
-
-<head>
     <!-- ...existing code... -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-</head>
+
+    <div 
+        x-data="{ 
+            showSuccess: new URLSearchParams(window.location.search).get('message') === 'success',
+            open: true 
+        }" 
+        x-show="showSuccess && open"
+        role="alert">
+        <div class="px-4 py-2 rounded-sm text-sm bg-emerald-500 text-white ">
+            <div class="flex w-full justify-between items-start">
+                <div class="flex">
+                    <svg class="w-4 h-4 shrink-0 fill-current opacity-80 mt-[3px] mr-3" viewBox="0 0 16 16">
+                        <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM7 11.4L3.6 8 5 6.6l2 2 4-4L12.4 6 7 11.4z" />
+                    </svg>
+                    <div class="font-medium">Empleado actualizado correctamente!</div>
+                </div>
+                <button class="opacity-70 hover:opacity-80 ml-3 mt-[3px]" @click="open = false">
+                    <div class="sr-only">Close</div>
+                    <svg class="w-4 h-4 fill-current">
+                        <path d="M7.95 6.536l4.242-4.243a1 1 0 111.415 1.414L9.364 7.95l4.243 4.242a1 1 0 11-1.415 1.415L7.95 9.364l-4.243 4.243a1 1 0 01-1.414-1.415L6.536 7.95 2.293 3.707a1 1 0 011.414-1.414L7.95 6.536z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
 
 <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-    <!-- Page header -->
+    
+    
     <div class="mb-8">
         <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Employee Details</h1>
     </div>
@@ -158,6 +179,31 @@
                     </button>
                 </div>
             </form>
+
+            <div x-data="{ show: false   }" 
+                x-show="show" 
+                 id="errorAlert"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-90"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 role="alert">
+                <div class="px-4 py-2 rounded-sm text-sm bg-rose-500 text-white mt-4">
+                    <div class="flex w-full justify-between items-start">
+                        <div class="flex">
+                            <svg class="w-4 h-4 shrink-0 fill-current opacity-80 mt-[3px] mr-3" viewBox="0 0 16 16">
+                                <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm3.5 10.1l-1.4 1.4L8 9.4l-2.1 2.1-1.4-1.4L6.6 8 4.5 5.9l1.4-1.4L8 6.6l2.1-2.1 1.4 1.4L9.4 8l2.1 2.1z" />
+                            </svg>
+                            <div class="font-medium">Ocurrio un error, intentalo mas tarde</div>
+                        </div>
+                        <button class="opacity-70 hover:opacity-80 ml-3 mt-[3px]" @click="show = false"></button>
+                            <div class="sr-only">Close</div>
+                            <svg class="w-4 h-4 fill-current">
+                                <path d="M7.95 6.536l4.242-4.243a1 1 0 111.415 1.414L9.364 7.95l4.243 4.242a1 1 0 11-1.415 1.415L7.95 9.364l-4.243 4.243a1 1 0 01-1.414-1.415L6.536 7.95 2.293 3.707a1 1 0 011.414-1.414L7.95 6.536z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -166,7 +212,6 @@
     let projectSelect;
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize TomSelect with existing data
         projectSelect = new TomSelect('#project-select', {
             plugins: ['remove_button', 'clear_button'],
             maxItems: null,
@@ -256,6 +301,11 @@
         submitButton.classList.add('opacity-50', 'cursor-not-allowed');
         loadingSpinner.classList.remove('hidden');
 
+        const errorAlert = document.getElementById('errorAlert');
+
+        const errorComponent = Alpine.$data(errorAlert);
+        errorComponent.show = false;
+
         const form = document.getElementById('employeeForm');
         const formData = new FormData(form);
         const formEntries = Object.fromEntries(formData.entries());
@@ -312,7 +362,7 @@
 
         try {
             const employeeId = window.location.pathname.split('/').pop();
-            const response = await fetch(`{{.URL}}/api/v1/admin/employees/${employeeId}`, {
+            const response = await fetch(`{{.URL}}/api/v1/admin/employedes/${employeeId}`, {
                 method: 'PUT',
                 body: postData,
                 headers: {
@@ -321,14 +371,13 @@
             });
 
             if (response.ok) {
-                alert('Employee updated successfully!');
-                window.location.reload();
+                window.location.href = `{{.URL}}/admin/employees/${employeeId}?message=success`;
             } else {
-                alert('Failed to update employee.');
+                errorComponent.show = true;
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while updating the employee.');
+            errorComponent.show = true;
         } finally {
             submitButton.disabled = false;
             submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
