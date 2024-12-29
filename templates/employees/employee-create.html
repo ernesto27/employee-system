@@ -4,7 +4,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
 
-<div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
+
     <!-- Page header -->
     <div class="mb-8">
         <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Create Employee</h1>
@@ -129,6 +129,8 @@
                     </div>
                 </div>
 
+                
+
                 <!-- Submit Section -->
                 <div class="mt-8 flex justify-end gap-4">
                     <button type="button" class="btn border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300">Cancel</button>
@@ -141,6 +143,30 @@
                     </button>
                 </div>
             </form>
+            <div x-data="{ show: false, message: '' }" 
+            x-show="show" 
+                 id="errorAlert"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 transform scale-90"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 role="alert">
+                <div class="px-4 py-2 rounded-sm text-sm bg-rose-500 text-white mt-4">
+                    <div class="flex w-full justify-between items-start">
+                        <div class="flex">
+                            <svg class="w-4 h-4 shrink-0 fill-current opacity-80 mt-[3px] mr-3" viewBox="0 0 16 16">
+                                <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm3.5 10.1l-1.4 1.4L8 9.4l-2.1 2.1-1.4-1.4L6.6 8 4.5 5.9l1.4-1.4L8 6.6l2.1-2.1 1.4 1.4L9.4 8l2.1 2.1z" />
+                            </svg>
+                            <div class="font-medium" x-text="message">Error message here</div>
+                        </div>
+                        <button class="opacity-70 hover:opacity-80 ml-3 mt-[3px]" @click="show = false"></button>
+                            <div class="sr-only">Close</div>
+                            <svg class="w-4 h-4 fill-current">
+                                <path d="M7.95 6.536l4.242-4.243a1 1 0 111.415 1.414L9.364 7.95l4.243 4.242a1 1 0 11-1.415 1.415L7.95 9.364l-4.243 4.243a1 1 0 01-1.414-1.415L6.536 7.95 2.293 3.707a1 1 0 011.414-1.414L7.95 6.536z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -184,6 +210,13 @@
         const submitButton = event.target.querySelector('button[type="submit"]');
         const loadingSpinner = submitButton.querySelector('#loadingSpinner');
         const buttonText = submitButton.querySelector('span');
+        const errorAlert = document.getElementById('errorAlert');
+
+        // Get Alpine.js component instance
+        const errorComponent = Alpine.$data(errorAlert);
+        
+        // Hide error alert at the start
+        errorComponent.show = false;
 
         // Show loading state
         submitButton.disabled = true;
@@ -244,14 +277,16 @@
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create employee');
+                throw new Error('Failed to create employee');
             }
 
-            alert('Employee created successfully!');
-            //window.location.href = '/admin/employees';
+            window.location.href = '/admin/employees?message=success';
         } catch (error) {
             console.error('Error:', error);
-            alert(error.message || 'An error occurred while creating the employee.');
+            errorComponent.message = 'Ocurrio un error, itentalo mas tarde';
+            errorComponent.show = true;
+            // Scroll to error message
+            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } finally {
             // Reset loading state
             submitButton.disabled = false;
