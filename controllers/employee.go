@@ -320,7 +320,8 @@ func uploadImages(r *http.Request, id int, employee *Employee) error {
 
 	for _, fileHeader := range files {
 		wg.Add(1)
-		go func(fileHeader *multipart.FileHeader) {
+		randomString := generateRandomString(10)
+		go func(fileHeader *multipart.FileHeader, randomString string) {
 			defer wg.Done()
 
 			if fileHeader.Size > (3 << 20) {
@@ -344,7 +345,6 @@ func uploadImages(r *http.Request, id int, employee *Employee) error {
 				return
 			}
 
-			randomString := generateRandomString(10)
 			path := fmt.Sprintf("employees/%d/%s.%s", id, randomString, filepath.Ext(fileHeader.Filename))
 			err = employee.S3Service.Upload(&buf, path)
 			if err != nil {
@@ -357,7 +357,7 @@ func uploadImages(r *http.Request, id int, employee *Employee) error {
 				Path: path,
 			})
 			mu.Unlock()
-		}(fileHeader)
+		}(fileHeader, randomString)
 	}
 
 	wg.Wait()
